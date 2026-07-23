@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>彩票数据预测系统 | 多因子统计模型</title>
+<style>
+:root {
+  --bg: #0a0a0f; --card-bg: rgba(22,22,30,0.8); --text: #e8e8f0; --text2: #8888a0;
+  --border: rgba(255,255,255,0.06); --primary: #ff4757; --accent: #5352ed; --gold: #ffa502;
+  --green: #2ed573; --purple: #a55eea; --radius: 20px; --blur: 20px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0 }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: var(--bg);
+  background-image:
+    radial-gradient(ellipse at 20% 50%, rgba(255,71,87,0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(83,82,237,0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 80%, rgba(165,94,234,0.06) 0%, transparent 50%);
+  color: var(--text); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px;
+}
+.container { max-width: 1000px; width: 100% }
+.hero { text-align: center; margin-bottom: 48px }
+.hero h1 { font-size: 2.4rem; font-weight: 900; background: linear-gradient(135deg, #ff4757, #ff6b81, #a55eea); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 8px }
+.hero p { color: var(--text2); font-size: 0.95rem; letter-spacing: 2px; text-transform: uppercase }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px }
+.card {
+  background: var(--card-bg); backdrop-filter: blur(var(--blur)); -webkit-backdrop-filter: blur(var(--blur));
+  border-radius: var(--radius); padding: 32px 28px; border: 1px solid var(--border);
+  text-decoration: none; color: var(--text); transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+  position: relative; overflow: hidden;
+}
+.card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; opacity: 0; transition: opacity 0.3s }
+.card-ssq::before { background: linear-gradient(90deg, #ff4757, #ff6b81) }
+.card-dlt::before { background: linear-gradient(90deg, #a55eea, #7c3aed) }
+.card-3d::before { background: linear-gradient(90deg, #ffa502, #ff6348) }
+.card:hover { transform: translateY(-6px); box-shadow: 0 20px 60px rgba(0,0,0,0.4); border-color: rgba(255,255,255,0.12) }
+.card:hover::before { opacity: 1 }
+.card-icon { font-size: 3rem; margin-bottom: 16px; transition: transform 0.3s }
+.card:hover .card-icon { transform: scale(1.1) }
+.card h2 { font-size: 1.3rem; font-weight: 800; margin-bottom: 6px }
+.card .tag { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 0.62rem; font-weight: 700; margin-bottom: 12px; letter-spacing: 1px }
+.tag-ssq { background: rgba(255,71,87,0.15); color: #ff6b81; border: 1px solid rgba(255,71,87,0.2) }
+.tag-dlt { background: rgba(165,94,234,0.15); color: #a55eea; border: 1px solid rgba(165,94,234,0.2) }
+.tag-3d { background: rgba(255,165,2,0.15); color: #ffa502; border: 1px solid rgba(255,165,2,0.2) }
+.card p { font-size: 0.78rem; color: var(--text2); line-height: 1.7 }
+.card-arrow { display: inline-flex; align-items: center; gap: 6px; margin-top: 16px; font-size: 0.85rem; font-weight: 700; transition: gap 0.3s }
+.card:hover .card-arrow { gap: 12px }
+.card-ssq .card-arrow { color: #ff6b81 } .card-dlt .card-arrow { color: #a55eea } .card-3d .card-arrow { color: #ffa502 }
+.features { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px }
+.ft { font-size: 0.6rem; padding: 3px 8px; border-radius: 6px; background: rgba(255,255,255,0.03); color: var(--text2); border: 1px solid rgba(255,255,255,0.04) }
+.footer { text-align: center; margin-top: 48px; font-size: 0.68rem; color: var(--text2); line-height: 2 }
+.footer .disclaimer { background: rgba(255,71,87,0.06); border: 1px solid rgba(255,71,87,0.1); padding: 14px 20px; border-radius: 14px; display: inline-block; backdrop-filter: blur(10px) }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(30px) } to { opacity: 1; transform: translateY(0) } }
+.hero { animation: fadeUp 0.6s ease-out }
+.cards .card:nth-child(1) { animation: fadeUp 0.6s ease-out 0.1s both }
+.cards .card:nth-child(2) { animation: fadeUp 0.6s ease-out 0.2s both }
+.cards .card:nth-child(3) { animation: fadeUp 0.6s ease-out 0.3s both }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="hero">
+    <h1>彩票数据预测系统</h1>
+    <p>多因子统计模型 · 纯前端 · 零依赖 · 开源透明</p>
+  </div>
+
+  <div class="cards">
+    <a href="双色球/index.html" class="card card-ssq">
+      <div class="card-icon">🔮</div>
+      <span class="tag tag-ssq">双色球</span>
+      <h2>SSQ 双色球预测</h2>
+      <p>8因子综合评分模型 · 红球33选6+蓝球16选1 · 每周二/四/日开奖</p>
+      <div class="features">
+        <span class="ft">复式7+3~15+5</span><span class="ft">胆拖投注</span><span class="ft">走势连线</span><span class="ft">200期数据</span>
+      </div>
+      <span class="card-arrow">进入 →</span>
+    </a>
+
+    <a href="大乐透/index.html" class="card card-dlt">
+      <div class="card-icon">💎</div>
+      <span class="tag tag-dlt">大乐透</span>
+      <h2>DLT 大乐透预测</h2>
+      <p>量子启发概率融合模型 · 前区35选5+后区12选2 · 每周一/三/六开奖</p>
+      <div class="features">
+        <span class="ft">复式6+3~12+4</span><span class="ft">胆拖投注</span><span class="ft">走势连线</span><span class="ft">231期数据</span>
+      </div>
+      <span class="card-arrow">进入 →</span>
+    </a>
+
+    <a href="福彩3D/index.html" class="card card-3d">
+      <div class="card-icon">🎲</div>
+      <span class="tag tag-3d">福彩3D</span>
+      <h2>FC3D 福彩3D预测</h2>
+      <p>位置独立7因子模型 · 百/十/个位各0-9 · 组三+组六 · 每天开奖</p>
+      <div class="features">
+        <span class="ft">组三组六推荐</span><span class="ft">复式4×4×4</span><span class="ft">012路走势</span><span class="ft">200期数据</span>
+      </div>
+      <span class="card-arrow">进入 →</span>
+    </a>
+  </div>
+
+  <div class="footer">
+    <div class="disclaimer">
+      ⚠️ <strong>彩票开奖是独立随机事件</strong>，任何统计模型均无法预测未来结果<br>
+      本系统仅供学术研究和娱乐参考，不构成投注建议，请理性购彩
+    </div>
+    <p style="margin-top:12px">数据来源：cwl.gov.cn / 500.com | 内置200+期真实开奖数据 | 本地缓存1小时</p>
+  </div>
+</div>
+</body>
+</html>

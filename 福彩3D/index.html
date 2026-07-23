@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>福彩3D专业预测系统 | 多因子统计模型</title>
+<style>
+:root{--bg:#f0f2f5;--card-bg:rgba(255,255,255,0.85);--text:#1a1a2e;--text2:#6b7280;--border:rgba(0,0,0,0.06);--primary:#dc2626;--accent:#2563eb;--gold:#d97706;--green:#059669;--shadow:0 1px 3px rgba(0,0,0,0.04),0 4px 16px rgba(0,0,0,0.06);--shadow-lg:0 8px 32px rgba(0,0,0,0.1);--radius:14px;--blur:16px}
+body.dark-mode{--bg:#0a0a12;--card-bg:rgba(22,22,35,0.8);--text:#e8e8f0;--text2:#8888a0;--border:rgba(255,255,255,0.06);--shadow:0 1px 3px rgba(0,0,0,0.2),0 4px 16px rgba(0,0,0,0.3);--shadow-lg:0 8px 40px rgba(0,0,0,0.5)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.6}
+.header{background:linear-gradient(135deg,#0f0f1e 0%,#1a1a2e 40%,#16213e 80%,#0f3460 100%);color:#fff;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;position:sticky;top:0;z-index:100;border-bottom:1px solid rgba(255,255,255,0.06)}
+.header-brand{display:flex;align-items:center;gap:8px}.header-logo{font-size:1.5rem}.header h1{font-size:1.05rem;font-weight:800}.header-subtitle{font-size:0.58rem;opacity:0.7}
+.header-controls{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.badge{display:inline-flex;align-items:center;gap:3px;padding:3px 10px;border-radius:20px;font-size:0.62rem;font-weight:700}
+.badge-live{background:rgba(39,174,96,0.2);color:#2ecc71;border:1px solid rgba(39,174,96,0.3)}
+.badge-cache{background:rgba(243,156,18,0.2);color:#f1c40f;border:1px solid rgba(243,156,18,0.3)}
+.badge-offline{background:rgba(231,76,60,0.2);color:#e74c3c;border:1px solid rgba(231,76,60,0.3)}
+.btn{padding:6px 14px;border:none;border-radius:8px;cursor:pointer;font-size:0.72rem;font-weight:700;transition:all 0.2s;display:inline-flex;align-items:center;gap:5px;letter-spacing:0.3px}
+.btn-accent{background:var(--accent);color:#fff;box-shadow:0 2px 8px rgba(37,99,235,0.3)}.btn-accent:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(37,99,235,0.4)}
+.btn-outline{background:transparent;border:1.5px solid rgba(255,255,255,0.3);color:#fff}.btn-outline:hover{border-color:#fff}
+.tab-nav{display:flex;gap:2px;background:var(--card-bg);backdrop-filter:blur(var(--blur));border-bottom:1px solid var(--border);overflow-x:auto;padding:4px 8px;position:sticky;top:52px;z-index:99;border-radius:0 0 var(--radius) var(--radius)}
+.tab-btn{padding:10px 14px;border:none;background:transparent;cursor:pointer;font-size:0.72rem;font-weight:600;color:var(--text2);white-space:nowrap;border-radius:8px;transition:all 0.2s}
+.tab-btn.active{color:#fff;background:var(--primary);box-shadow:0 2px 8px rgba(220,38,38,0.3)}.tab-btn:hover:not(.active){color:var(--text);background:rgba(0,0,0,0.04)}
+.main{max-width:1300px;margin:0 auto;padding:12px}.tab-content{display:none}.tab-content.active{display:block}
+.card{background:var(--card-bg);backdrop-filter:blur(var(--blur));-webkit-backdrop-filter:blur(var(--blur));border-radius:var(--radius);padding:16px;margin-bottom:10px;box-shadow:var(--shadow);border:1px solid var(--border);transition:all 0.25s}
+.card-header{font-size:0.9rem;font-weight:800;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;padding-bottom:8px;border-bottom:2px solid var(--border)}
+select{padding:5px 8px;border:2px solid var(--border);border-radius:7px;font-size:0.73rem;background:var(--card-bg);color:var(--text)}
+.ball{display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:34px;border-radius:50%;font-size:0.8rem;font-weight:800;color:#fff;margin:1px;cursor:pointer;transition:all 0.15s;border:2px solid transparent}
+.ball.bai{background:linear-gradient(135deg,#c0392b,#e74c3c);box-shadow:0 2px 5px rgba(192,57,43,0.3)}
+.ball.shi{background:linear-gradient(135deg,#d4a017,#f39c12);box-shadow:0 2px 5px rgba(243,156,18,0.35)}
+.ball.ge{background:linear-gradient(135deg,#2471a3,#3498db);box-shadow:0 2px 5px rgba(36,113,163,0.3)}
+.ball.gold{background:linear-gradient(135deg,#d4a017,#f39c12);box-shadow:0 2px 5px rgba(243,156,18,0.35);animation:glow 2s infinite}
+.ball.lg{min-width:42px;height:42px;font-size:1rem}.ball.xl{min-width:50px;height:50px;font-size:1.25rem}
+.ball.selected{border-color:#fff;box-shadow:0 0 12px rgba(255,255,255,0.6);transform:scale(1.1)}
+.ball.pickable:hover{transform:scale(1.15);box-shadow:0 0 14px currentColor}
+.ball.match{box-shadow:0 0 10px rgba(46,204,113,0.7);border-color:#2ecc71}.ball.miss{opacity:0.3;filter:grayscale(0.7)}
+@keyframes glow{0%,100%{box-shadow:0 2px 5px rgba(243,156,18,0.35)}50%{box-shadow:0 2px 16px rgba(243,156,18,0.7)}}
+.last-draw-card{background:linear-gradient(135deg,#1a3a1a,#0d2818,#1a1a2e);border-radius:var(--radius);padding:14px 18px;color:#fff;margin-bottom:10px;text-align:center;border:1px solid rgba(46,204,113,0.3)}
+.last-label{font-size:0.6rem;letter-spacing:3px;opacity:0.7}.last-period{font-size:0.95rem;font-weight:800;margin:2px 0 6px}.last-draw-balls{display:flex;align-items:center;justify-content:center;gap:7px;flex-wrap:wrap}.last-draw-date{font-size:0.65rem;opacity:0.5}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:7px;margin-bottom:10px}
+.stat-card{background:var(--card-bg);backdrop-filter:blur(var(--blur));border-radius:var(--radius);padding:14px;text-align:center;box-shadow:var(--shadow);border:1px solid var(--border);transition:all 0.2s}
+.stat-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg)}
+.stat-value{font-size:1.5rem;font-weight:900}.stat-label{font-size:0.64rem;color:var(--text2);margin-top:2px;font-weight:600;text-transform:uppercase;letter-spacing:1px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}@media(max-width:768px){.grid-2,.grid-3{grid-template-columns:1fr}}
+.rec-hero{background:linear-gradient(135deg,#1a1a2e,#16213e,#c0392b);border-radius:var(--radius);padding:22px 16px;text-align:center;color:#fff;margin-bottom:10px;position:relative;overflow:hidden}
+.rec-hero::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(circle,rgba(255,255,255,0.03) 1px,transparent 1px);background-size:30px 30px}.rec-hero *{position:relative;z-index:1}
+.rec-label{font-size:0.65rem;letter-spacing:3px;opacity:0.7;margin-bottom:4px}.rec-period{font-size:1.2rem;font-weight:900}
+.rec-balls{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;margin:14px 0}.rec-confidence{display:inline-block;padding:3px 14px;border-radius:50px;font-size:0.7rem;font-weight:700;background:rgba(255,255,255,0.15)}.rec-disclaimer{margin-top:8px;font-size:0.6rem;opacity:0.6}
+.fushi-card{background:rgba(255,255,255,0.08);border-radius:10px;padding:14px;margin-top:12px;border:1px dashed rgba(255,255,255,0.2)}
+.fushi-card .fushi-title{font-size:0.7rem;opacity:0.6;margin-bottom:6px}
+.price-tag{display:inline-block;padding:3px 12px;border-radius:15px;font-size:0.75rem;font-weight:800;background:rgba(46,204,113,0.2);color:#2ecc71;margin-top:6px}
+.price-tag.gold-bg{background:rgba(243,156,18,0.2);color:#f1c40f}
+.kill-balls{display:flex;flex-wrap:wrap;gap:3px}.kill-ball{display:inline-flex;align-items:center;justify-content:center;min-width:28px;height:28px;border-radius:6px;font-size:0.65rem;font-weight:800;color:#fff;background:linear-gradient(135deg,#636e72,#95a5a6);text-decoration:line-through;opacity:0.7}
+.table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:0.72rem}th,td{padding:6px 8px;text-align:center;border-bottom:1px solid var(--border)}th{background:var(--bg);font-weight:800}
+.trend-matrix{overflow-x:auto;font-size:0.58rem}.trend-matrix table{min-width:600px}.trend-cell{width:16px;height:16px;display:inline-flex;align-items:center;justify-content:center}.trend-hit{color:#fff;border-radius:50%;font-size:0.44rem;font-weight:800}.trend-miss{color:var(--text2);font-size:0.42rem}
+.bar-row{display:flex;align-items:center;gap:3px;margin:1px 0}.bar-label{min-width:14px;font-size:0.6rem;font-weight:700;text-align:right}.bar-track{flex:1;height:12px;background:var(--border);border-radius:3px;overflow:hidden}.bar-fill{height:100%;border-radius:3px;display:flex;align-items:center;padding-left:2px;font-size:0.5rem;color:#fff;font-weight:700}.bar-fill.bai-bg{background:linear-gradient(90deg,#c0392b,#e74c3c)}.bar-fill.shi-bg{background:linear-gradient(90deg,#d4a017,#f39c12)}.bar-fill.ge-bg{background:linear-gradient(90deg,#2471a3,#3498db)}
+.hc-balls-row{display:flex;flex-wrap:wrap;gap:2px}.hc-ball{display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:26px;border-radius:50%;font-size:0.63rem;font-weight:800;color:#fff}.hc-ball.hot{background:linear-gradient(135deg,#c0392b,#e74c3c)}.hc-ball.warm{background:linear-gradient(135deg,#e67e22,#f39c12)}.hc-ball.cold{background:linear-gradient(135deg,#2471a3,#3498db)}.hc-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:2px}
+.tag{display:inline-block;padding:2px 6px;border-radius:10px;font-size:0.58rem;font-weight:700}.tag-rise{background:#d5f5e3;color:#1e8449}.tag-fall{background:#fadbd8;color:#c0392b}
+.disclaimer{background:linear-gradient(135deg,#fff9e6,#fff3cd);border:2px solid #ffc107;border-radius:var(--radius);padding:9px 14px;font-size:0.67rem;color:#856404;text-align:center;margin-bottom:10px}body.dark-mode .disclaimer{background:linear-gradient(135deg,#2d2410,#3a2e0a);border-color:#6a5200;color:#e0c060}
+.disclaimer-footer{text-align:center;padding:10px;font-size:0.6rem;color:var(--text2);border-top:1px solid var(--border)}
+.gen-set{display:flex;align-items:center;gap:4px;margin:5px 0;justify-content:center;flex-wrap:wrap}
+.pick-section{margin-bottom:10px}.pick-grid{display:flex;flex-wrap:wrap;gap:3px;justify-content:center}.pick-info{text-align:center;margin-top:6px;font-size:0.78rem;font-weight:700}
+.pos-bai{color:#e74c3c}.pos-shi{color:#f39c12}.pos-ge{color:#3498db}
+@media(max-width:768px){.header{padding:8px}.header h1{font-size:0.9rem}.tab-nav{top:44px}.tab-btn{padding:7px 6px;font-size:0.62rem}.main{padding:6px}.card{padding:10px 8px}.rec-hero{padding:14px 10px}}
+.form-matrix{overflow-x:auto;font-size:0.6rem;max-height:500px;overflow-y:auto}
+.form-matrix table{width:100%;border-collapse:collapse}
+.form-matrix th{position:sticky;top:0;background:var(--bg);z-index:1;padding:4px 5px;text-align:center;font-size:0.6rem;font-weight:800;white-space:nowrap}
+.form-matrix td{padding:3px 5px;text-align:center;border-top:1px solid var(--border);white-space:nowrap}
+.route-0{color:#e74c3c;font-weight:700}.route-1{color:#2980b9;font-weight:700}.route-2{color:#27ae60;font-weight:700}
+.fs-red{color:#e74c3c}.fs-blue{color:#2980b9}.fs-purple{color:#8e44ad}.fs-gray{color:#95a5a6}.fs-gold{color:#d4a017}.fs-green{color:#27ae60}
+.tr-alt{background:rgba(128,128,128,0.04)}body.dark-mode .tr-alt{background:rgba(255,255,255,0.03)}
+@keyframes cardIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.card{animation:cardIn 0.4s ease-out}
+.ball{transition:all 0.2s}.ball:hover{transform:scale(1.15);filter:brightness(1.2)}
+select{border-radius:8px;transition:all 0.2s}select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(37,99,235,0.1)}
+::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-brand"><span class="header-logo">🎲</span><div><h1>福彩3D · 专业预测系统</h1><div class="header-subtitle">多因子统计预测模型</div></div></div>
+  <div class="header-controls">
+    <span id="sourceBadge" class="badge badge-offline">📦 内置</span>
+    <span id="dataInfo" style="font-size:0.6rem;opacity:0.7">--</span>
+    <button class="btn btn-outline btn-sm" onclick="refreshAll()">🔄 刷新</button>
+    <button class="btn btn-outline btn-sm" onclick="saveCurrentPrediction()">💾 保存</button>
+    <button class="btn btn-outline btn-sm" onclick="toggleTheme()" id="themeBtn">🌙</button>
+  </div>
+</header>
+
+<nav class="tab-nav" id="tabNav">
+  <button class="tab-btn active" data-tab="rec">🎯推荐</button>
+  <button class="tab-btn" data-tab="kill">❌杀号</button>
+  <button class="tab-btn" data-tab="dantuo">💎定胆</button>
+  <button class="tab-btn" data-tab="freq">📊频率</button>
+  <button class="tab-btn" data-tab="trend">📈走势</button>
+  <button class="tab-btn" data-tab="form">📐形态</button>
+  <button class="tab-btn" data-tab="omi">🔍遗漏</button>
+  <button class="tab-btn" data-tab="indicator">📐指标</button>
+  <button class="tab-btn" data-tab="gen">🎲选号</button>
+  <button class="tab-btn" data-tab="pick">✏️自选</button>
+  <button class="tab-btn" data-tab="group">🎯组选</button>
+  <button class="tab-btn" data-tab="history">📝记录</button>
+  <button class="tab-btn" data-tab="report">📊报告</button><button class="tab-btn" data-tab="backtest">🔬回测</button>
+  <button class="tab-btn" data-tab="about">ℹ️说明</button>
+</nav>
+
+<main class="main">
+
+<!-- REC -->
+<section class="tab-content active" id="tab-rec">
+  <div class="disclaimer">⚠️ 福彩3D每天开奖，000-999随机产生。本系统仅供学术研究和娱乐参考。</div>
+  <div class="last-draw-card"><div class="last-label">◆ 上期开奖号码 ◆</div><div class="last-period" id="lastPeriod">--</div><div class="last-draw-balls" id="lastDrawBalls"></div><div class="last-draw-date" id="lastDrawDate"></div></div>
+  <div class="rec-hero"><div class="rec-label">◆ 本期单式推荐 ◆</div><div class="rec-period" id="recPeriod">--</div><div class="rec-balls" id="recBalls"></div><div class="rec-confidence" id="recConfidence">--</div><div class="price-tag" style="margin-top:4px">💰 1注 × 2元 = <strong>2元</strong></div>
+    <div class="fushi-card"><div class="fushi-title">◆ 本期复式推荐（4+4+4）◆ 百/十/个位各选4码</div><div class="rec-balls" id="fushiBalls"></div><div class="price-tag gold-bg">💰 4×4×4=64注 × 2元 = <strong>128元</strong></div><div class="rec-disclaimer">复式大幅提高容错率，每组位置多覆盖3个数字</div></div>
+  </div>
+  <div class="stat-grid" id="recStats"></div>
+  <div class="card"><div class="card-header">📋 各位置评分明细</div><div class="table-wrap" id="recDetailTable"></div></div>
+  <div class="card"><div class="card-header">🧠 决策逻辑</div><div id="recRationale" style="line-height:1.9;font-size:0.78rem;"></div></div>
+</section>
+
+<!-- KILL -->
+<section class="tab-content" id="tab-kill">
+  <div class="grid-3">
+    <div class="card"><div class="card-header"><span class="pos-bai">⬤</span> 百位杀号</div><div class="kill-balls" id="killBai"></div><div id="killBaiR" style="margin-top:3px;font-size:0.63rem;color:var(--text2)"></div></div>
+    <div class="card"><div class="card-header"><span class="pos-shi">⬤</span> 十位杀号</div><div class="kill-balls" id="killShi"></div><div id="killShiR" style="margin-top:3px;font-size:0.63rem;color:var(--text2)"></div></div>
+    <div class="card"><div class="card-header"><span class="pos-ge">⬤</span> 个位杀号</div><div class="kill-balls" id="killGe"></div><div id="killGeR" style="margin-top:3px;font-size:0.63rem;color:var(--text2)"></div></div>
+  </div>
+</section>
+
+<!-- DANTUO -->
+<section class="tab-content" id="tab-dantuo">
+  <div class="rec-hero" style="background:linear-gradient(135deg,#1a1a2e,#16213e,#f39c12)"><div class="rec-label">◆ 独胆（全位置最高评分数字）◆</div><div id="dudanDisplay" style="margin:12px 0"></div></div>
+  <div class="grid-3"><div class="card"><div class="card-header"><span class="pos-bai">⬤</span> 百位定胆</div><div id="baiDD" style="display:flex;gap:5px;justify-content:center;padding:5px 0"></div></div><div class="card"><div class="card-header"><span class="pos-shi">⬤</span> 十位定胆</div><div id="shiDD" style="display:flex;gap:5px;justify-content:center;padding:5px 0"></div></div><div class="card"><div class="card-header"><span class="pos-ge">⬤</span> 个位定胆</div><div id="geDD" style="display:flex;gap:5px;justify-content:center;padding:5px 0"></div></div></div>
+  <div class="card"><div class="card-header">🗂️ 各位置大底（5码）</div><div class="grid-3" id="dadiGrid"></div></div>
+</section>
+
+<!-- FREQ -->
+<section class="tab-content" id="tab-freq"><div class="card"><div class="card-header">📊 频率 <select id="freqPeriod" onchange="renderFrequency()"><option value="30">30期</option><option value="50">50期</option><option value="100" selected>100期</option></select></div><div class="grid-3"><div><h4 class="pos-bai">⬤ 百位</h4><div id="baiBars"></div></div><div><h4 class="pos-shi">⬤ 十位</h4><div id="shiBars"></div></div><div><h4 class="pos-ge">⬤ 个位</h4><div id="geBars"></div></div></div></div><div class="grid-3"><div class="card"><div class="card-header"><span class="pos-bai">⬤</span> 百位冷热</div><div id="baiHC"></div></div><div class="card"><div class="card-header"><span class="pos-shi">⬤</span> 十位冷热</div><div id="shiHC"></div></div><div class="card"><div class="card-header"><span class="pos-ge">⬤</span> 个位冷热</div><div id="geHC"></div></div></div></section>
+
+<!-- TREND / OMI / INDICATOR -->
+<section class="tab-content" id="tab-trend"><div class="card"><div class="card-header">📈 走势（最新→最早）<select id="trendPeriod" onchange="renderTrend()"><option value="30">30期</option><option value="50" selected>50期</option><option value="100">100期</option></select></div><div class="trend-matrix" id="trendMatrix"></div></div></section>
+
+<section class="tab-content" id="tab-omi"><div class="grid-3"><div class="card"><div class="card-header"><span class="pos-bai">⬤</span> 百位遗漏</div><div class="table-wrap" id="omiBai"></div></div><div class="card"><div class="card-header"><span class="pos-shi">⬤</span> 十位遗漏</div><div class="table-wrap" id="omiShi"></div></div><div class="card"><div class="card-header"><span class="pos-ge">⬤</span> 个位遗漏</div><div class="table-wrap" id="omiGe"></div></div></div></section>
+
+<section class="tab-content" id="tab-indicator"><div class="stat-grid" id="indStats"></div><div class="card"><div class="card-header">📐 近20期明细</div><div class="table-wrap" id="indDetail"></div></div></section>
+
+<!-- FORM TREND -->
+<section class="tab-content" id="tab-form">
+  <div class="card"><div class="card-header">📐 形态走势（最新→最早）<select id="formPeriod" onchange="renderFormTrend()"><option value="30">30期</option><option value="50" selected>50期</option><option value="100">100期</option></select></div>
+  <div class="grid-3"><div class="card"><div class="card-header"><span class="pos-bai">⬤</span> 百位012路</div><div class="form-matrix" id="routeBai"></div></div><div class="card"><div class="card-header"><span class="pos-shi">⬤</span> 十位012路</div><div class="form-matrix" id="routeShi"></div></div><div class="card"><div class="card-header"><span class="pos-ge">⬤</span> 个位012路</div><div class="form-matrix" id="routeGe"></div></div></div>
+  <div class="grid-3"><div class="card"><div class="card-header">⚖️ 奇偶</div><div class="stat-grid" id="oeStats3D"></div></div><div class="card"><div class="card-header">📏 大小</div><div class="stat-grid" id="bsStats3D"></div></div><div class="card"><div class="card-header">🔢 质合</div><div class="stat-grid" id="pcStats3D"></div></div></div>
+  <div class="card"><div class="card-header">📊 形态明细（近30期）</div><div class="form-matrix" id="formDetail3D"></div></div>
+  </div>
+</section>
+
+<!-- GEN -->
+<section class="tab-content" id="tab-gen"><div class="card"><div class="card-header">🎲 智能选号 <div style="display:flex;gap:3px"><button class="btn btn-accent" onclick="smartGenerate(1)">1注</button><button class="btn btn-accent" onclick="smartGenerate(5)">5注</button><button class="btn btn-accent" onclick="smartGenerate(10)">10注</button></div></div><div id="genDisplay" style="text-align:center;padding:16px;color:var(--text2)">👆 点击生成</div></div><div class="card"><div class="card-header">📝 历史</div><div id="genHistory"><p style="color:var(--text2)">暂无</p></div></div></section>
+
+<!-- PICK (self-select) -->
+<section class="tab-content" id="tab-pick">
+  <div class="disclaimer">✏️ 每位置至少选1个数字，投注金额=百位选数×十位选数×个位选数×2元</div>
+  <div class="grid-3">
+    <div class="card pick-section"><div class="card-header"><span class="pos-bai">⬤</span> 百位 <span style="font-size:0.65rem;color:var(--text2)">选 <span id="baiCnt">0</span> 个</span></div><div class="pick-grid" id="baiGrid"></div></div>
+    <div class="card pick-section"><div class="card-header"><span class="pos-shi">⬤</span> 十位 <span style="font-size:0.65rem;color:var(--text2)">选 <span id="shiCnt">0</span> 个</span></div><div class="pick-grid" id="shiGrid"></div></div>
+    <div class="card pick-section"><div class="card-header"><span class="pos-ge">⬤</span> 个位 <span style="font-size:0.65rem;color:var(--text2)">选 <span id="geCnt">0</span> 个</span></div><div class="pick-grid" id="geGrid"></div></div>
+  </div>
+  <div class="card" style="text-align:center">
+    <div style="margin-bottom:6px"><strong>已选：</strong><span id="pickDisplay"></span></div>
+    <div class="pick-info">百位 <span id="pnBai">0</span> × 十位 <span id="pnShi">0</span> × 个位 <span id="pnGe">0</span> = <span id="pickCombos">0</span> 注 → <strong style="color:#e74c3c;font-size:1.1rem">¥<span id="pickPrice">0</span></strong></div>
+    <button class="btn btn-accent" onclick="clearPicks()" style="margin-top:5px">🔄 清空</button>
+  </div>
+</section>
+
+<!-- HISTORY / BACKTEST / ABOUT -->
+<section class="tab-content" id="tab-history"><div class="disclaimer">📝 点击顶栏"💾 保存"记录。开奖后自动比对百/十/个位。</div><div class="stat-grid" id="historyStats"></div><div class="card"><div class="card-header">📊 近10期命中趋势</div><div id="hitTrendChart"></div></div><div class="card"><div class="card-header">📋 全部记录
+  <div style="display:flex;gap:4px;flex-wrap:wrap">
+    <button class="btn btn-sm hist-filt active" data-filter="all" onclick="setHistoryFilter('all',this)" style="font-size:0.6rem;padding:3px 8px;background:var(--accent);color:#fff;border:none;border-radius:12px">全部</button>
+    <button class="btn btn-sm hist-filt" data-filter="pred" onclick="setHistoryFilter('pred',this)" style="font-size:0.6rem;padding:3px 8px;background:transparent;color:var(--text2);border:1px solid var(--border);border-radius:12px">🎯预测</button>
+    <button class="btn btn-sm hist-filt" data-filter="kill" onclick="setHistoryFilter('kill',this)" style="font-size:0.6rem;padding:3px 8px;background:transparent;color:var(--text2);border:1px solid var(--border);border-radius:12px">❌杀号</button>
+    <button class="btn btn-accent btn-sm" onclick="clearHistory()">🗑️</button>
+  </div></div><div class="table-wrap" id="historyTable"></div></div></section>
+
+<section class="tab-content" id="tab-backtest"><div class="disclaimer">🔬 回测：对最近N期模拟预测（只用当时之前的数据），与真实开奖比对。</div><div class="card"><div class="card-header">🔬 模型回测 <select id="backtestPeriod"><option value="10">10期</option><option value="20" selected>20期</option><option value="30">30期</option></select><button class="btn btn-accent btn-sm" onclick="runBacktest()">▶ 运行</button></div><div class="stat-grid" id="backtestStats"></div><div id="backtestLoading" style="text-align:center;padding:16px;color:var(--text2)">👆 点击运行</div><div class="table-wrap" id="backtestTable"></div></div></section>
+
+<!-- 组选推荐 -->
+<section class="tab-content" id="tab-group">
+  <div style="color:var(--text2);font-size:0.7rem;text-align:center;margin-bottom:8px">组三=两个号码相同(AAB) 346元 | 组六=三个不同(ABC) 173元 | 豹子=全同(AAA) 1040元</div>
+
+  <div class="grid-2">
+    <div class="card" style="border-left:3px solid #e74c3c">
+      <div class="card-header">🔴 组三推荐（AAB型）<span style="font-size:0.6rem;color:var(--text2)">近30期出现 <span id="gs3Rate">--</span></span></div>
+      <div id="gs3Display" style="text-align:center;padding:10px"></div>
+      <div id="gs3Reason" style="font-size:0.65rem;color:var(--text2);margin-top:6px"></div>
+      <div class="price-tag gold-bg" style="display:block;text-align:center;margin-top:8px">💰 组三单注 = <strong>346元</strong>（中奖）</div>
+    </div>
+    <div class="card" style="border-left:3px solid #2980b9">
+      <div class="card-header">🔵 组六推荐（ABC型）<span style="font-size:0.6rem;color:var(--text2)">近30期出现 <span id="gs6Rate">--</span></span></div>
+      <div id="gs6Display" style="text-align:center;padding:10px"></div>
+      <div id="gs6Reason" style="font-size:0.65rem;color:var(--text2);margin-top:6px"></div>
+      <div class="price-tag gold-bg" style="display:block;text-align:center;margin-top:8px">💰 组六单注 = <strong>173元</strong>（中奖）</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">📊 组选形态走势（近30期）</div>
+    <div class="form-matrix" id="groupTrend"></div>
+  </div>
+</section>
+
+<section class="tab-content" id="tab-report"><div id="reportContent"></div></section>
+<section class="tab-content" id="tab-about"><div class="card"><div class="card-header">🧠 福彩3D预测方法论 v2.0</div><div style="line-height:1.9;font-size:0.78rem">
+<h3 style="color:var(--primary)">改进的多因子模型（每位置独立8因子）</h3>
+<ol style="padding-left:18px;margin:5px 0"><li><strong>遗漏回归 (23%)</strong> — Poisson过程</li><li><strong>频率稳定 (18%)</strong> — Z-score</li><li><strong>冷热趋势 (13%)</strong> — EWMA(λ=0.3)</li><li><strong>012路均衡 (10%)</strong> — 0/1/2路分布回归</li><li><strong>和值/跨度 (10%)</strong> — 分布回归</li><li><strong>关联规则 (8%)</strong> — 跨位置共现</li><li><strong>邻号分析 (8%)</strong> — 相邻数字倾向</li><li><strong>形态匹配 (5%)</strong> — 奇偶/大小/质合</li><li><strong>质合加权 (5%)</strong> — 质数统计特征</li></ol>
+<h3 style="color:var(--primary);margin-top:10px">复式投注</h3><p>• <strong>4+4+4复式</strong>：百位4码×十位4码×个位4码=64注×2元=<strong>128元</strong></p><p>• 自助选号支持任意组合，实时计算注数和金额</p>
+<h3 style="color:var(--primary);margin-top:10px">数据</h3><p>实时cwl.gov.cn API + 200期内置兜底数据。1小时缓存。</p>
+<div class="disclaimer" style="text-align:left;margin-top:8px"><p>• 彩票开奖是<strong>完全随机的独立事件</strong></p><p>• 本系统仅供学术研究和娱乐参考</p></div></div></div></section>
+</main>
+<div class="disclaimer-footer">⚠️ 彩票开奖是独立随机事件。本系统仅供学术研究和娱乐参考。</div>
+
+<script>
+/* ==================================================================
+   DATA & CONSTANTS
+   ================================================================== */
+var DIGIT_R=10,POS=['bai','shi','ge'],POS_C=['#e74c3c','#f39c12','#3498db'],POS_N=['百位','十位','个位'];
+var STORAGE_TH='fc3d2_th',STORAGE_PRED='fc3d2_pred',STORAGE_CACHE='fc3d2_data',STORAGE_TS='fc3d2_ts';
+var CACHE_TTL=60*60*1000;
+var PRIMES=[2,3,5,7].reduce(function(s,n){s.add(n);return s},new Set);
+
+var EMBEDDED_DATA=[{issue:'2026192',date:'2026-07-21',digits:[4,2,5]},
+{issue:'2026191',date:'2026-07-20',digits:[9,0,6]},
+{issue:'2026190',date:'2026-07-19',digits:[0,2,6]},
+{issue:'2026189',date:'2026-07-18',digits:[5,5,8]},
+{issue:'2026188',date:'2026-07-17',digits:[9,6,9]},
+{issue:'2026187',date:'2026-07-16',digits:[0,2,3]},
+{issue:'2026186',date:'2026-07-15',digits:[0,4,5]},
+{issue:'2026185',date:'2026-07-14',digits:[3,9,7]},
+{issue:'2026184',date:'2026-07-13',digits:[9,0,2]},
+{issue:'2026183',date:'2026-07-12',digits:[9,2,3]},
+{issue:'2026182',date:'2026-07-11',digits:[6,6,2]},
+{issue:'2026181',date:'2026-07-10',digits:[8,1,8]},
+{issue:'2026180',date:'2026-07-09',digits:[5,2,0]},
+{issue:'2026179',date:'2026-07-08',digits:[9,9,3]},
+{issue:'2026178',date:'2026-07-07',digits:[2,6,6]},
+{issue:'2026177',date:'2026-07-06',digits:[8,0,8]},
+{issue:'2026176',date:'2026-07-05',digits:[2,6,9]},
+{issue:'2026175',date:'2026-07-04',digits:[4,2,1]},
+{issue:'2026174',date:'2026-07-03',digits:[6,1,8]},
+{issue:'2026173',date:'2026-07-02',digits:[6,7,7]},
+{issue:'2026172',date:'2026-07-01',digits:[4,4,5]},
+{issue:'2026171',date:'2026-06-30',digits:[1,3,4]},
+{issue:'2026170',date:'2026-06-29',digits:[8,0,5]},
+{issue:'2026169',date:'2026-06-28',digits:[8,3,2]},
+{issue:'2026168',date:'2026-06-27',digits:[1,3,0]},
+{issue:'2026167',date:'2026-06-26',digits:[6,3,1]},
+{issue:'2026166',date:'2026-06-25',digits:[9,0,0]},
+{issue:'2026165',date:'2026-06-24',digits:[4,2,4]},
+{issue:'2026164',date:'2026-06-23',digits:[6,9,0]},
+{issue:'2026163',date:'2026-06-22',digits:[5,3,7]},
+{issue:'2026162',date:'2026-06-21',digits:[5,8,5]},
+{issue:'2026161',date:'2026-06-20',digits:[5,2,9]},
+{issue:'2026160',date:'2026-06-19',digits:[3,3,2]},
+{issue:'2026159',date:'2026-06-18',digits:[9,9,5]},
+{issue:'2026158',date:'2026-06-17',digits:[1,7,8]},
+{issue:'2026157',date:'2026-06-16',digits:[3,2,7]},
+{issue:'2026156',date:'2026-06-15',digits:[1,6,2]},
+{issue:'2026155',date:'2026-06-14',digits:[4,0,9]},
+{issue:'2026154',date:'2026-06-13',digits:[3,7,7]},
+{issue:'2026153',date:'2026-06-12',digits:[8,8,7]},
+{issue:'2026152',date:'2026-06-11',digits:[2,2,0]},
+{issue:'2026151',date:'2026-06-10',digits:[6,3,1]},
+{issue:'2026150',date:'2026-06-09',digits:[7,2,0]},
+{issue:'2026149',date:'2026-06-08',digits:[6,9,6]},
+{issue:'2026148',date:'2026-06-07',digits:[4,0,8]},
+{issue:'2026147',date:'2026-06-06',digits:[7,1,2]},
+{issue:'2026146',date:'2026-06-05',digits:[4,6,4]},
+{issue:'2026145',date:'2026-06-04',digits:[2,7,9]},
+{issue:'2026144',date:'2026-06-03',digits:[7,2,6]},
+{issue:'2026143',date:'2026-06-02',digits:[3,7,6]},
+{issue:'2026142',date:'2026-06-01',digits:[8,9,4]},
+{issue:'2026141',date:'2026-05-31',digits:[3,9,7]},
+{issue:'2026140',date:'2026-05-30',digits:[2,8,5]},
+{issue:'2026139',date:'2026-05-29',digits:[2,8,6]},
+{issue:'2026138',date:'2026-05-28',digits:[7,9,0]},
+{issue:'2026137',date:'2026-05-27',digits:[1,6,5]},
+{issue:'2026136',date:'2026-05-26',digits:[8,8,9]},
+{issue:'2026135',date:'2026-05-25',digits:[4,8,7]},
+{issue:'2026134',date:'2026-05-24',digits:[6,5,4]},
+{issue:'2026133',date:'2026-05-23',digits:[0,8,0]},
+{issue:'2026132',date:'2026-05-22',digits:[7,5,6]},
+{issue:'2026131',date:'2026-05-21',digits:[5,9,8]},
+{issue:'2026130',date:'2026-05-20',digits:[2,6,7]},
+{issue:'2026129',date:'2026-05-19',digits:[0,2,3]},
+{issue:'2026128',date:'2026-05-18',digits:[7,7,6]},
+{issue:'2026127',date:'2026-05-17',digits:[7,0,0]},
+{issue:'2026126',date:'2026-05-16',digits:[8,4,6]},
+{issue:'2026125',date:'2026-05-15',digits:[9,5,4]},
+{issue:'2026124',date:'2026-05-14',digits:[2,8,0]},
+{issue:'2026123',date:'2026-05-13',digits:[2,0,0]},
+{issue:'2026122',date:'2026-05-12',digits:[3,4,6]},
+{issue:'2026121',date:'2026-05-11',digits:[3,9,3]},
+{issue:'2026120',date:'2026-05-10',digits:[7,3,4]},
+{issue:'2026119',date:'2026-05-09',digits:[1,1,2]},
+{issue:'2026118',date:'2026-05-08',digits:[1,3,2]},
+{issue:'2026117',date:'2026-05-07',digits:[4,1,1]},
+{issue:'2026116',date:'2026-05-06',digits:[0,2,0]},
+{issue:'2026115',date:'2026-05-05',digits:[5,8,1]},
+{issue:'2026114',date:'2026-05-04',digits:[8,6,4]},
+{issue:'2026113',date:'2026-05-03',digits:[0,4,0]},
+{issue:'2026112',date:'2026-05-02',digits:[0,6,5]},
+{issue:'2026111',date:'2026-05-01',digits:[8,6,3]},
+{issue:'2026110',date:'2026-04-30',digits:[3,7,9]},
+{issue:'2026109',date:'2026-04-29',digits:[1,9,5]},
+{issue:'2026108',date:'2026-04-28',digits:[6,7,1]},
+{issue:'2026107',date:'2026-04-27',digits:[2,7,8]},
+{issue:'2026106',date:'2026-04-26',digits:[9,2,8]},
+{issue:'2026105',date:'2026-04-25',digits:[6,3,1]},
+{issue:'2026104',date:'2026-04-24',digits:[4,8,2]},
+{issue:'2026103',date:'2026-04-23',digits:[6,6,1]},
+{issue:'2026102',date:'2026-04-22',digits:[4,2,0]},
+{issue:'2026101',date:'2026-04-21',digits:[5,8,4]},
+{issue:'2026100',date:'2026-04-20',digits:[4,1,4]},
+{issue:'2026099',date:'2026-04-19',digits:[8,7,7]},
+{issue:'2026098',date:'2026-04-18',digits:[5,1,3]},
+{issue:'2026097',date:'2026-04-17',digits:[8,1,8]},
+{issue:'2026096',date:'2026-04-16',digits:[6,8,9]},
+{issue:'2026095',date:'2026-04-15',digits:[0,2,2]},
+{issue:'2026094',date:'2026-04-14',digits:[4,1,8]},
+{issue:'2026093',date:'2026-04-13',digits:[5,1,8]},
+{issue:'2026092',date:'2026-04-12',digits:[8,7,0]},
+{issue:'2026091',date:'2026-04-11',digits:[5,3,7]},
+{issue:'2026090',date:'2026-04-10',digits:[8,1,6]},
+{issue:'2026089',date:'2026-04-09',digits:[9,2,2]},
+{issue:'2026088',date:'2026-04-08',digits:[6,0,8]},
+{issue:'2026087',date:'2026-04-07',digits:[9,1,1]},
+{issue:'2026086',date:'2026-04-06',digits:[3,8,2]},
+{issue:'2026085',date:'2026-04-05',digits:[1,1,8]},
+{issue:'2026084',date:'2026-04-04',digits:[4,5,6]},
+{issue:'2026083',date:'2026-04-03',digits:[5,0,6]},
+{issue:'2026082',date:'2026-04-02',digits:[9,4,2]},
+{issue:'2026081',date:'2026-04-01',digits:[8,2,7]},
+{issue:'2026080',date:'2026-03-31',digits:[8,0,2]},
+{issue:'2026079',date:'2026-03-30',digits:[2,3,3]},
+{issue:'2026078',date:'2026-03-29',digits:[0,4,9]},
+{issue:'2026077',date:'2026-03-28',digits:[1,1,2]},
+{issue:'2026076',date:'2026-03-27',digits:[8,6,3]},
+{issue:'2026075',date:'2026-03-26',digits:[8,1,6]},
+{issue:'2026074',date:'2026-03-25',digits:[4,8,7]},
+{issue:'2026073',date:'2026-03-24',digits:[5,0,4]},
+{issue:'2026072',date:'2026-03-23',digits:[2,4,5]},
+{issue:'2026071',date:'2026-03-22',digits:[2,6,1]},
+{issue:'2026070',date:'2026-03-21',digits:[4,8,4]},
+{issue:'2026069',date:'2026-03-20',digits:[9,0,8]},
+{issue:'2026068',date:'2026-03-19',digits:[7,0,6]},
+{issue:'2026067',date:'2026-03-18',digits:[6,9,5]},
+{issue:'2026066',date:'2026-03-17',digits:[9,3,4]},
+{issue:'2026065',date:'2026-03-16',digits:[0,5,7]},
+{issue:'2026064',date:'2026-03-15',digits:[6,0,4]},
+{issue:'2026063',date:'2026-03-14',digits:[5,1,7]},
+{issue:'2026062',date:'2026-03-13',digits:[2,9,4]},
+{issue:'2026061',date:'2026-03-12',digits:[4,2,9]},
+{issue:'2026060',date:'2026-03-11',digits:[9,4,3]},
+{issue:'2026059',date:'2026-03-10',digits:[7,9,4]},
+{issue:'2026058',date:'2026-03-09',digits:[5,4,3]},
+{issue:'2026057',date:'2026-03-08',digits:[2,6,4]},
+{issue:'2026056',date:'2026-03-07',digits:[4,7,7]},
+{issue:'2026055',date:'2026-03-06',digits:[1,0,7]},
+{issue:'2026054',date:'2026-03-05',digits:[2,1,7]},
+{issue:'2026053',date:'2026-03-04',digits:[7,5,5]},
+{issue:'2026052',date:'2026-03-03',digits:[2,7,7]},
+{issue:'2026051',date:'2026-03-02',digits:[3,0,2]},
+{issue:'2026050',date:'2026-03-01',digits:[6,8,9]},
+{issue:'2026049',date:'2026-02-28',digits:[1,1,0]},
+{issue:'2026048',date:'2026-02-27',digits:[6,1,2]},
+{issue:'2026047',date:'2026-02-26',digits:[9,3,6]},
+{issue:'2026046',date:'2026-02-25',digits:[2,9,1]},
+{issue:'2026045',date:'2026-02-24',digits:[1,8,1]},
+{issue:'2026044',date:'2026-02-13',digits:[5,8,9]},
+{issue:'2026043',date:'2026-02-12',digits:[7,6,5]},
+{issue:'2026042',date:'2026-02-11',digits:[8,5,4]},
+{issue:'2026041',date:'2026-02-10',digits:[9,0,1]},
+{issue:'2026040',date:'2026-02-09',digits:[4,2,5]},
+{issue:'2026039',date:'2026-02-08',digits:[4,5,0]},
+{issue:'2026038',date:'2026-02-07',digits:[4,6,7]},
+{issue:'2026037',date:'2026-02-06',digits:[4,2,0]},
+{issue:'2026036',date:'2026-02-05',digits:[7,6,2]},
+{issue:'2026035',date:'2026-02-04',digits:[2,1,3]},
+{issue:'2026034',date:'2026-02-03',digits:[0,5,2]},
+{issue:'2026033',date:'2026-02-02',digits:[1,1,9]},
+{issue:'2026032',date:'2026-02-01',digits:[4,5,2]},
+{issue:'2026031',date:'2026-01-31',digits:[1,4,2]},
+{issue:'2026030',date:'2026-01-30',digits:[1,3,4]},
+{issue:'2026029',date:'2026-01-29',digits:[0,0,3]},
+{issue:'2026028',date:'2026-01-28',digits:[2,7,0]},
+{issue:'2026027',date:'2026-01-27',digits:[1,2,6]},
+{issue:'2026026',date:'2026-01-26',digits:[0,9,9]},
+{issue:'2026025',date:'2026-01-25',digits:[0,2,9]},
+{issue:'2026024',date:'2026-01-24',digits:[9,1,1]},
+{issue:'2026023',date:'2026-01-23',digits:[7,8,4]},
+{issue:'2026022',date:'2026-01-22',digits:[6,7,8]},
+{issue:'2026021',date:'2026-01-21',digits:[5,5,9]},
+{issue:'2026020',date:'2026-01-20',digits:[6,7,6]},
+{issue:'2026019',date:'2026-01-19',digits:[2,2,3]},
+{issue:'2026018',date:'2026-01-18',digits:[4,9,4]},
+{issue:'2026017',date:'2026-01-17',digits:[9,4,5]},
+{issue:'2026016',date:'2026-01-16',digits:[5,8,2]},
+{issue:'2026015',date:'2026-01-15',digits:[5,3,2]},
+{issue:'2026014',date:'2026-01-14',digits:[0,5,0]},
+{issue:'2026013',date:'2026-01-13',digits:[5,1,3]},
+{issue:'2026012',date:'2026-01-12',digits:[2,4,1]},
+{issue:'2026011',date:'2026-01-11',digits:[6,4,7]},
+{issue:'2026010',date:'2026-01-10',digits:[6,6,7]},
+{issue:'2026009',date:'2026-01-09',digits:[2,6,5]},
+{issue:'2026008',date:'2026-01-08',digits:[2,5,2]},
+{issue:'2026007',date:'2026-01-07',digits:[3,5,3]},
+{issue:'2026006',date:'2026-01-06',digits:[2,4,4]},
+{issue:'2026005',date:'2026-01-05',digits:[4,7,6]},
+{issue:'2026004',date:'2026-01-04',digits:[0,1,9]},
+{issue:'2026003',date:'2026-01-03',digits:[6,0,1]},
+{issue:'2026002',date:'2026-01-02',digits:[5,2,0]},
+{issue:'2026001',date:'2026-01-01',digits:[2,9,8]},
+{issue:'2025351',date:'2025-12-31',digits:[4,5,2]},
+{issue:'2025350',date:'2025-12-30',digits:[5,8,0]},
+{issue:'2025349',date:'2025-12-29',digits:[7,4,3]},
+{issue:'2025348',date:'2025-12-28',digits:[2,7,8]},
+{issue:'2025347',date:'2025-12-27',digits:[1,9,2]},
+{issue:'2025346',date:'2025-12-26',digits:[8,9,7]},
+{issue:'2025345',date:'2025-12-25',digits:[6,3,0]},
+{issue:'2025344',date:'2025-12-24',digits:[6,2,2]}];
+
+var allDraws=EMBEDDED_DATA.slice();
+var currentPrediction=null,genHistory=[],predictionHistory=[];
+var pickedDigits=[[],[],[]]; // [bai picks, shi picks, ge picks]
+
+/* ==================================================================
+   LIVE DATA FETCH
+   ================================================================== */
+function setBadge(type,msg){var b=document.getElementById('sourceBadge'),i=document.getElementById('dataInfo');if(type==='live'){b.className='badge badge-live';b.textContent='📡 实时'}else if(type==='cache'){b.className='badge badge-cache';b.textContent='💾 缓存'}else{b.className='badge badge-offline';b.textContent='📦 离线'}i.textContent=msg}
+function tryParseCWL3D(text){try{var d=JSON.parse(text);if(d&&d.result)return d.result.map(function(x){var digits=(x.red||'').split(',').map(Number).filter(function(n){return n>=0&&n<=9});return digits.length===3?{issue:x.code,date:(x.date||'').replace(/\(.\)/,''),digits:digits}:null}).filter(Boolean)}catch(e){return null}}
+
+function fetchOne(url,parser){return new Promise(function(resolve){var done=false,proxies=['https://corsproxy.io/?','https://api.codetabs.com/v1/proxy?quest=','https://cors.eu.org/','https://api.cors.lol/?url=','https://cors-proxy.htmldriven.com/?url='];function attempt(u){if(done)return;try{fetch(u,{signal:AbortSignal.timeout(8000)}).then(function(r){if(!done&&r.ok){r.text().then(function(t){var d=parser(t);if(d&&d.length>10&&!done){done=true;resolve(d)}}).catch(function(){})}}).catch(function(){})}catch(e){}}attempt(url);proxies.forEach(function(p){attempt(p+encodeURIComponent(url))});setTimeout(function(){if(!done){done=true;resolve(null)}},15000)})}
+async function fetchLiveData(){var localR=await fetchOne('http://localhost:8888/fetch?name=3d',tryParseCWL3D);if(localR&&localR.length>50)return localR;return await fetchOne('https://www.cwl.gov.cn/cwl_admin/front/cwlkj/search/kjxx/findDrawNotice?name=3d&issueCount=100',tryParseCWL3D)}
+function getCached(){try{var ts=localStorage.getItem(STORAGE_TS);if(ts&&(Date.now()-parseInt(ts))<CACHE_TTL){var r=localStorage.getItem(STORAGE_CACHE);if(r){var d=JSON.parse(r);if(Array.isArray(d)&&d.length>10)return d}}}catch(e){}return null}
+function setCache(d){try{localStorage.setItem(STORAGE_CACHE,JSON.stringify(d));localStorage.setItem(STORAGE_TS,Date.now().toString())}catch(e){}}
+async function loadData(){var cached=getCached();if(cached){allDraws=cached;setBadge('cache',allDraws.length+'期·缓存·最新'+allDraws[0].issue)}else{allDraws=EMBEDDED_DATA.slice();setBadge('offline',allDraws.length+'期·内置·最新'+allDraws[0].issue)}setBadge('offline','🔄 抓取中...');fetchLiveData().then(function(live){if(live&&live.length>50&&live.length>=allDraws.length){allDraws=live;setCache(live);setBadge('live',allDraws.length+'期·实时·最新'+allDraws[0].issue);currentPrediction=generateRecommendation();var el=document.querySelector('.tab-content.active');if(el&&el.id==='tab-rec')renderRecommendation()}else{setBadge('offline',allDraws.length+'期·离线·最新'+allDraws[0].issue+' (30秒后重试)');setTimeout(function(){fetchLiveData().then(function(live2){if(live2&&live2.length>50&&live2.length>=allDraws.length){allDraws=live2;setCache(live2);setBadge('live',allDraws.length+'期·实时·最新'+allDraws[0].issue);currentPrediction=generateRecommendation();var el2=document.querySelector('.tab-content.active');if(el2&&el2.id==='tab-rec')renderRecommendation()}}).catch(function(){})},30000)}}).catch(function(){setBadge('offline',allDraws.length+'期·离线·最新'+allDraws[0].issue)})}
+
+/* ==================================================================
+   8-FACTOR PER-POSITION SCORING (improved)
+   ================================================================== */
+function computePositionScores(draws,posIdx){
+  var N=draws.length;if(N<10)return null;
+  var freq={};for(var i=0;i<DIGIT_R;i++)freq[i]=0;draws.forEach(function(d){freq[d.digits[posIdx]]++});
+  var omi=[];for(var n=0;n<DIGIT_R;n++){var f=false;for(var i=0;i<N;i++){if(draws[i].digits[posIdx]===n){omi.push({num:n,omi:i});f=true;break}}if(!f)omi.push({num:n,omi:N})}
+  var maxO={},curO={};for(var n=0;n<DIGIT_R;n++){maxO[n]=0;curO[n]=0}draws.forEach(function(d){for(var n=0;n<DIGIT_R;n++){if(d.digits[posIdx]===n){maxO[n]=Math.max(maxO[n],curO[n]);curO[n]=0}else curO[n]++}});for(var n=0;n<DIGIT_R;n++)maxO[n]=Math.max(maxO[n],curO[n]);
+  var expected=N/DIGIT_R;
+  // Cross-position correlation
+  function crossPos(n){var s=0;draws.slice(0,Math.min(10,N)).forEach(function(d){for(var p=0;p<3;p++){if(p!==posIdx&&d.digits[p]===n)s+=3}});return Math.min(100,s*10)}
+  // Neighbor score: n-1 or n+1 recent appearance
+  function neighborScore(n){var s=0,r=draws.slice(0,Math.min(10,N));r.forEach(function(d){if(Math.abs(d.digits[posIdx]-n)<=1)s++});return Math.min(100,s*10)}
+  function ewma(n){var l=0.3,e=0,c=0;for(var i=0;i<Math.min(30,N);i++){var h=draws[i].digits[posIdx]===n?1:0;if(i===0)e=h;else e=l*h+(1-l)*e;c+=h}return{ewma:e,count:c}}
+
+  var scores=[];
+  for(var n=0;n<DIGIT_R;n++){
+    var o=omi.filter(function(x){return x.num===n})[0].omi,mo=maxO[n]||1,fq=freq[n]||0,tr=ewma(n),cr=crossPos(n),nb=neighborScore(n),ip=PRIMES.has(n)?1:0;
+    var os=Math.min(100,(o/Math.max(1,mo))*100*0.9+(ip?5:0));
+    var sd=Math.sqrt(expected*(1-1/DIGIT_R)),zs=sd>0?Math.abs((fq-expected)/sd):0,fs=Math.max(0,100-zs*35);
+    var ts=Math.min(100,(tr.count/Math.min(30,N))*100*1.5+tr.ewma*40);
+    var ps=45+Math.abs(4.5-n)*(-3)+cr*0.3; // position balance
+    var cs=Math.min(100,cr),ns=Math.min(100,nb);
+    var pats=50+(ip?15:0)+(n%2===0?5:0)+(n%3===0?5:-5);
+    // 012路 factor (10%)
+    var route012=n%3;
+    var routeCounts=[0,0,0];draws.slice(0,Math.min(30,N)).forEach(function(d){routeCounts[d.digits[posIdx]%3]++});
+    var routeTotal=routeCounts[0]+routeCounts[1]+routeCounts[2]||1;
+    var rs=Math.min(100,50+((routeCounts[route012]/Math.max(1,routeTotal))-1/3)*-90);
+    // 质合 factor (5%)
+    var primeSet=[2,3,5,7];
+    var primeRecent=0,compRecent=0;draws.slice(0,Math.min(30,N)).forEach(function(d){var x=d.digits[posIdx];if(primeSet.indexOf(x)>=0)primeRecent++;else compRecent++});
+    var primeRatio=primeRecent/Math.max(1,primeRecent+compRecent);
+    var primeS=primeSet.indexOf(n)>=0?Math.min(100,55+(0.30-primeRatio)*150):Math.min(100,55+(primeRatio-0.30)*150);
+    var total=os*0.23+fs*0.18+ts*0.13+rs*0.10+ps*0.10+cs*0.08+ns*0.08+pats*0.05+primeS*0.05;
+    scores.push({num:n,omi:o,freq:fq,score:Math.round(total*10)/10,bd:{omi:Math.round(os),fq:Math.round(fs),tr:Math.round(ts),ps:Math.round(ps),cr:Math.round(cs),ns:Math.round(ns),pt:Math.round(pats)}});
+  }
+  scores.sort(function(a,b){return b.score-a.score});return scores;
+}
+
+function computeAllScores(draws){return{scores:[computePositionScores(draws,0),computePositionScores(draws,1),computePositionScores(draws,2)],meta:{totalDraws:draws.length,latestIssue:draws[0].issue,latestDate:draws[0].date}}}
+
+function generateRecommendation(){
+  var r=computeAllScores(allDraws);if(!r||r.scores.some(function(s){return!s}))return null;
+  var ss=r.scores,m=r.meta,rec=ss.map(function(s){return s[0].num}),recS=ss.map(function(s){return s[0].score});
+  var oc=Math.round(recS.reduce(function(a,b){return a+b},0)/3*10)/10;
+  var kill=ss.map(function(s){return s.slice(-3).map(function(x){return x.num}).sort(function(a,b){return a-b})});
+  var dd=ss.map(function(s){return s.slice(0,2).map(function(x){return x.num})});
+  var fushi=ss.map(function(s){return s.slice(0,4).map(function(x){return x.num}).sort(function(a,b){return a-b})}); // 4+4+4
+  var bn=0,bs=0,bp=0;ss.forEach(function(s,pi){s.forEach(function(x){if(x.score>bs){bs=x.score;bn=x.num;bp=pi}})});
+  var dadi=ss.map(function(s){return s.slice(0,5).map(function(x){return x.num}).sort(function(a,b){return a-b})});
+  return{recDigits:rec,recScores:recS,overallConf:oc,killPerPos:kill,dingdanPerPos:dd,fushiPerPos:fushi,dudan:{num:bn,pos:bp,score:bs},dadiPerPos:dadi,scores:ss,meta:m};
+}
+
+/* ==================================================================
+   SELF-PICK
+   ================================================================== */
+function buildPickGrids(){
+  function grid(cls,pi){var h='';for(var i=0;i<DIGIT_R;i++)h+='<span class="ball '+cls+' pickable'+(pickedDigits[pi].indexOf(i)>=0?' selected':'')+'" onclick="togglePick('+pi+','+i+')">'+i+'</span>';return h}
+  document.getElementById('baiGrid').innerHTML=grid('bai',0);document.getElementById('shiGrid').innerHTML=grid('shi',1);document.getElementById('geGrid').innerHTML=grid('ge',2);
+  updatePickInfo();
+}
+function togglePick(pi,n){var idx=pickedDigits[pi].indexOf(n);if(idx>=0)pickedDigits[pi].splice(idx,1);else pickedDigits[pi].push(n);pickedDigits[pi].sort(function(a,b){return a-b});buildPickGrids()}
+function clearPicks(){pickedDigits=[[],[],[]];buildPickGrids()}
+function updatePickInfo(){
+  document.getElementById('baiCnt').textContent=pickedDigits[0].length;document.getElementById('shiCnt').textContent=pickedDigits[1].length;document.getElementById('geCnt').textContent=pickedDigits[2].length;
+  document.getElementById('pnBai').textContent=Math.max(1,pickedDigits[0].length);document.getElementById('pnShi').textContent=Math.max(1,pickedDigits[1].length);document.getElementById('pnGe').textContent=Math.max(1,pickedDigits[2].length);
+  var combos=pickedDigits[0].length&&pickedDigits[1].length&&pickedDigits[2].length?pickedDigits[0].length*pickedDigits[1].length*pickedDigits[2].length:0;
+  document.getElementById('pickCombos').textContent=combos;document.getElementById('pickPrice').textContent=(combos*2).toLocaleString();
+  document.getElementById('pickDisplay').innerHTML=(pickedDigits[0].length||pickedDigits[1].length||pickedDigits[2].length)?'百['+pickedDigits[0].join(',')+'] 十['+pickedDigits[1].join(',')+'] 个['+pickedDigits[2].join(',')+']':'<span style="color:var(--text2)">未选</span>';
+}
+
+/* ==================================================================
+   HISTORY / BACKTEST
+   ================================================================== */
+function loadPredictions(){try{var r=localStorage.getItem(STORAGE_PRED);if(r){predictionHistory=JSON.parse(r);autoMatch()}}catch(e){predictionHistory=[]}}
+function savePredictions(){try{localStorage.setItem(STORAGE_PRED,JSON.stringify(predictionHistory))}catch(e){}}
+function saveCurrentPrediction(){if(!currentPrediction)return;var p=currentPrediction,next=parseInt(p.meta.latestIssue)+1;for(var i=0;i<predictionHistory.length;i++){if(predictionHistory[i].issue===String(next))return}predictionHistory.unshift({issue:String(next),date:new Date().toLocaleDateString(),predDigits:p.recDigits.slice(),fushiDigits:p.fushiPerPos.map(function(a){return a.slice()}),killDigits:p.killPerPos.map(function(a){return a.slice()}),confidence:p.overallConf,actualDigits:null,hits:[false,false,false],totalHits:-1,fushiHits:[-1,-1,-1],fushiTotalHits:-1});savePredictions();autoMatch();renderHistory()}
+function autoSavePrediction(){
+  if(!currentPrediction)return;
+  var p=currentPrediction,next=parseInt(p.meta.latestIssue)+1;
+  for(var i=0;i<predictionHistory.length;i++){if(predictionHistory[i].issue===next)return}
+  predictionHistory.unshift({issue:next,time:new Date().toLocaleString(),digits:p.recDigits.slice(),fushiDigits:p.fushiPerPos.map(function(a){return a.slice()}),killDigits:p.killPerPos.map(function(a){return a.slice()}),confidence:p.overallConf,actualDigits:null,totalHits:-1,fushiTotalHits:-1,killHits:[-1,-1,-1]});
+  if(predictionHistory.length>100)predictionHistory.pop();
+  savePredictions();autoMatch();
+}
+function autoMatch(){var c=false;predictionHistory.forEach(function(ph){if(ph.actualDigits!==null)return;for(var i=0;i<allDraws.length;i++){if(allDraws[i].issue===ph.issue){ph.actualDigits=allDraws[i].digits.slice();var h=0;for(var p=0;p<3;p++){ph.hits[p]=(ph.predDigits[p]===ph.actualDigits[p]);if(ph.hits[p])h++}ph.totalHits=h;if(ph.fushiDigits){var fh=0;ph.fushiHits=[false,false,false];for(var p=0;p<3;p++){ph.fushiHits[p]=(ph.fushiDigits[p].indexOf(ph.actualDigits[p])>=0);if(ph.fushiHits[p])fh++}ph.fushiTotalHits=fh}if(ph.killDigits&&ph.killDigits.length===3){ph.killHits=[0,0,0];for(var p2=0;p2<3;p2++){var miss=0;ph.killDigits[p2].forEach(function(n){if(ph.actualDigits[p2]===n)miss++});ph.killHits[p2]=ph.killDigits[p2].length-miss}}c=true;break}}});if(c)savePredictions()}
+function clearHistory(){if(confirm('确定清空？')){predictionHistory=[];savePredictions();renderHistory()}}
+var historyFilter='all';
+function setHistoryFilter(f,btn){
+  historyFilter=f;
+  document.querySelectorAll('.hist-filt').forEach(function(b){b.style.background='transparent';b.style.color='var(--text2)';b.style.border='1px solid var(--border)'});
+  btn.style.background='var(--accent)';btn.style.color='#fff';btn.style.border='none';
+  renderHistory();
+}
+
+function renderHistory(){
+  autoMatch();var matched=0,th=0,total=predictionHistory.length,best=0,bestF=0,tthF=0;predictionHistory.forEach(function(ph){if(ph.actualDigits!==null){matched++;th+=ph.totalHits;if(ph.totalHits>best)best=ph.totalHits;if(ph.fushiTotalHits>=0){tthF+=ph.fushiTotalHits;if(ph.fushiTotalHits>bestF)bestF=ph.fushiTotalHits}}});
+  var ktTotal=0,ktCount=0;predictionHistory.forEach(function(ph){if(ph.killHits&&ph.killHits[0]>=0){ktTotal+=ph.killHits[0]+ph.killHits[1]+ph.killHits[2];ktCount+=ph.killDigits[0].length+ph.killDigits[1].length+ph.killDigits[2].length}});
+  var kr=ktCount>0?(ktTotal/ktCount*100).toFixed(0)+'%':'--';
+  document.getElementById('historyStats').innerHTML='<div class="stat-card"><div class="stat-value">'+total+'</div><div class="stat-label">总记录</div></div><div class="stat-card"><div class="stat-value green">'+matched+'</div><div class="stat-label">已比对</div></div><div class="stat-card"><div class="stat-value red">'+(matched>0?(th/matched).toFixed(1):'--')+'</div><div class="stat-label">单式均命中</div></div><div class="stat-card"><div class="stat-value gold">'+best+'</div><div class="stat-label">单式最佳</div></div><div class="stat-card"><div class="stat-value" style="color:#f39c12">'+(matched>0?(tthF/matched).toFixed(1):'--')+'</div><div class="stat-label">复式均命中</div></div><div class="stat-card"><div class="stat-value gold">'+bestF+'</div><div class="stat-label">复式最佳</div></div><div class="stat-card"><div class="stat-value" style="color:#e74c3c">'+kr+'</div><div class="stat-label">杀号准确率</div></div>';
+  var ml=(predictionHistory.filter(function(ph){return ph.actualDigits!==null}).slice(0,10)).reverse();
+  var thtml='<div style="display:flex;align-items:flex-end;gap:3px;height:55px">';ml.forEach(function(ph){var hh=Math.max(3,ph.totalHits/3*52);thtml+='<div style="flex:1;text-align:center"><div style="background:'+(ph.totalHits===3?'#27ae60':ph.totalHits>=1?'#f39c12':'#e74c3c')+';height:'+hh+'px;border-radius:2px 2px 0 0" title="'+ph.issue+' 单'+ph.totalHits+' 复'+(ph.fushiTotalHits||0)+'"></div><div style="font-size:0.42rem">'+ph.issue+'</div></div>'});thtml+='</div>';if(!ml.length)thtml='<p style="color:var(--text2);text-align:center;padding:14px">暂无</p>';document.getElementById('hitTrendChart').innerHTML=thtml;
+  if(historyFilter==='kill'){
+    var htm='<table><thead><tr><th>期号</th><th>百位杀号</th><th>十位杀号</th><th>个位杀号</th><th>实际</th><th>杀号准</th></tr></thead><tbody>';
+    if(!predictionHistory.length)htm+='<tr><td colspan="6" style="color:var(--text2)">暂无。点击💾保存。</td></tr>';
+    predictionHistory.forEach(function(ph){
+      if(!ph.killDigits)return;
+      var kb=ph.killDigits[0]?ph.killDigits[0].map(function(n){return'<span class="kill-ball">'+n+'</span>'}).join(''):'--';
+      var ks=ph.killDigits[1]?ph.killDigits[1].map(function(n){return'<span class="kill-ball">'+n+'</span>'}).join(''):'--';
+      var kg=ph.killDigits[2]?ph.killDigits[2].map(function(n){return'<span class="kill-ball">'+n+'</span>'}).join(''):'--';
+      htm+='<tr><td>'+ph.issue+'</td><td>'+kb+'</td><td>'+ks+'</td><td>'+kg+'</td>';
+      if(ph.actualDigits){
+        var khs=(ph.killHits&&ph.killHits[0]>=0)?(ph.killHits[0]+ph.killHits[1]+ph.killHits[2]):-1;
+        var ktotal=(ph.killDigits[0]?ph.killDigits[0].length:0)+(ph.killDigits[1]?ph.killDigits[1].length:0)+(ph.killDigits[2]?ph.killDigits[2].length:0);
+        htm+='<td>'+ph.actualDigits.map(function(d,i){var hit=false;if(ph.killDigits[i])hit=ph.killDigits[i].indexOf(d)>=0;return'<span class="ball '+POS[i]+(hit?' miss':' match')+'">'+d+'</span>'}).join('')+'</td>';
+        htm+='<td><strong style="color:'+(khs>=ktotal-1?'#27ae60':khs>=ktotal-3?'#f39c12':'#e74c3c')+'">'+(khs>=0?khs+'/'+ktotal:'--')+'</strong></td>';
+      }else{htm+='<td colspan="2" style="color:var(--text2)">等待开奖...</td>'}
+      htm+='</tr>';
+    });htm+='</tbody></table>';document.getElementById('historyTable').innerHTML=htm;
+  }else{
+    var htm='<table><thead><tr><th>期号</th><th>单式</th><th>复式(4+4+4)</th><th>杀号</th><th>实际</th><th>单命中</th><th>复命中</th><th>置信度</th></tr></thead><tbody>';
+    if(!predictionHistory.length)htm+='<tr><td colspan="8" style="color:var(--text2)">暂无。点击💾保存。</td></tr>';
+    predictionHistory.forEach(function(ph){
+      if(historyFilter==='pred'&&!ph.predDigits)return;
+      htm+='<tr><td>'+ph.issue+'</td><td><span class="ball bai">'+ph.predDigits[0]+'</span><span class="ball shi">'+ph.predDigits[1]+'</span><span class="ball ge">'+ph.predDigits[2]+'</span></td><td>'+(ph.fushiDigits?ph.fushiDigits[0].map(function(n){return'<span class="ball bai">'+n+'</span>'}).join('')+' <span class="ball shi">'+(ph.fushiDigits[1]||[]).join('</span><span class="ball shi">')+'</span> <span class="ball ge">'+(ph.fushiDigits[2]||[]).join('</span><span class="ball ge">')+'</span>':'--')+'</td><td>'+(ph.killHits&&ph.killHits[0]>=0?(ph.killHits[0]+ph.killHits[1]+ph.killHits[2])+'/'+(ph.killDigits[0].length+ph.killDigits[1].length+ph.killDigits[2].length):'--')+'</td>';if(ph.actualDigits){htm+='<td>'+ph.actualDigits.map(function(d,i){return'<span class="ball '+POS[i]+(ph.hits[i]?' match':' miss')+'">'+d+'</span>'}).join('')+'</td><td><strong style="color:'+(ph.totalHits===3?'#27ae60':ph.totalHits>=1?'#f39c12':'#e74c3c')+'">'+ph.totalHits+'/3</strong></td><td><strong style="color:'+(ph.fushiTotalHits===3?'#27ae60':ph.fushiTotalHits>=1?'#f39c12':'#e74c3c')+'">'+(ph.fushiTotalHits>=0?ph.fushiTotalHits+'/3':'--')+'</strong></td>'}else{htm+='<td colspan="3" style="color:var(--text2)">等待开奖...</td>'}htm+='<td>'+(ph.confidence||'--')+'%</td></tr>'
+    });htm+='</tbody></table>';document.getElementById('historyTable').innerHTML=htm;
+  }
+}
+
+function runBacktest(){
+  var n=parseInt(document.getElementById('backtestPeriod').value)||20,si=0;document.getElementById('backtestLoading').textContent='⏳ 计算中...';
+  setTimeout(function(){
+    try{var results=[];for(var i=n-1;i>=0;i--){var ti=si+i;if(ti>=allDraws.length)continue;var past=allDraws.slice(ti+1);if(past.length<10)continue;var sc=[computePositionScores(past,0),computePositionScores(past,1),computePositionScores(past,2)];if(sc.some(function(s){return!s}))continue;var pr=[sc[0][0].num,sc[1][0].num,sc[2][0].num],act=allDraws[ti],h=0;for(var p=0;p<3;p++)if(pr[p]===act.digits[p])h++;results.unshift({issue:act.issue,pred:pr,actual:act.digits,hits:h})}
+    var th=0;results.forEach(function(r){th+=r.hits});var ar=results.length>0?(th/results.length).toFixed(1):'--',best=0;results.forEach(function(r){if(r.hits>best)best=r.hits});
+    document.getElementById('backtestStats').innerHTML='<div class="stat-card"><div class="stat-value">'+results.length+'</div><div class="stat-label">回测期数</div></div><div class="stat-card"><div class="stat-value red">'+ar+'</div><div class="stat-label">均命中/期</div></div><div class="stat-card"><div class="stat-value gold">'+best+'</div><div class="stat-label">最佳</div></div><div class="stat-card"><div class="stat-value green">'+results.filter(function(r){return r.hits===3}).length+'</div><div class="stat-label">全中</div></div>';
+    var bh='<table><thead><tr><th>期号</th><th>预测</th><th>实际</th><th>命中</th></tr></thead><tbody>';results.forEach(function(r){bh+='<tr><td>'+r.issue+'</td><td><span class="ball bai">'+r.pred[0]+'</span><span class="ball shi">'+r.pred[1]+'</span><span class="ball ge">'+r.pred[2]+'</span></td><td>'+r.actual.map(function(d,i){return'<span class="ball '+POS[i]+(r.pred[i]===d?' match':' miss')+'">'+d+'</span>'}).join('')+'</td><td><strong style="color:'+(r.hits===3?'#27ae60':r.hits>=1?'#f39c12':'#e74c3c')+'">'+r.hits+'/3</strong></td></tr>'});bh+='</tbody></table>';document.getElementById('backtestTable').innerHTML=bh;document.getElementById('backtestLoading').textContent='✅ 完成'}catch(e){document.getElementById('backtestLoading').textContent='❌ 出错:'+e.message}
+  },50);
+}
+
+/* ==================================================================
+   RENDER
+   ================================================================== */
+function renderLastDraw(){if(!allDraws.length)return;var d=allDraws[0],sum=d.digits.reduce(function(a,b){return a+b},0),span=Math.max.apply(null,d.digits)-Math.min.apply(null,d.digits);document.getElementById('lastPeriod').textContent='第 '+d.issue+' 期 · 开奖号码';document.getElementById('lastDrawBalls').innerHTML='<span class="ball bai lg">'+d.digits[0]+'</span><span class="ball shi lg">'+d.digits[1]+'</span><span class="ball ge lg">'+d.digits[2]+'</span>';document.getElementById('lastDrawDate').textContent=(d.date||'')+' | 和值'+sum+' | 跨度'+span}
+
+function renderRecommendation(){
+  renderLastDraw();currentPrediction=generateRecommendation();if(!currentPrediction)return;var p=currentPrediction,next=parseInt(p.meta.latestIssue)+1;
+  document.getElementById('recPeriod').textContent='第 '+next+' 期 · 综合推荐';
+  document.getElementById('recBalls').innerHTML='<span class="ball xl bai">'+p.recDigits[0]+'</span><span class="ball xl shi">'+p.recDigits[1]+'</span><span class="ball xl ge">'+p.recDigits[2]+'</span>';
+  var cl,cc;if(p.overallConf>=75){cl='★★★★ 高';cc='#2ecc71'}else if(p.overallConf>=60){cl='★★★ 中';cc='#f1c40f'}else{cl='★★ 参考';cc='#e74c3c'}
+  document.getElementById('recConfidence').innerHTML='置信度：<strong>'+p.overallConf+'%</strong> <span style="color:'+cc+'">'+cl+'</span>';
+  // Fushi display
+  document.getElementById('fushiBalls').innerHTML='<span style="color:#fff;font-size:0.65rem;margin-right:2px">百</span>'+p.fushiPerPos[0].map(function(n){return'<span class="ball bai">'+n+'</span>'}).join('')+'<span style="color:#fff;font-size:0.65rem;margin:0 2px 0 8px">十</span>'+p.fushiPerPos[1].map(function(n){return'<span class="ball shi">'+n+'</span>'}).join('')+'<span style="color:#fff;font-size:0.65rem;margin:0 2px 0 8px">个</span>'+p.fushiPerPos[2].map(function(n){return'<span class="ball ge">'+n+'</span>'}).join('');
+  var sum=p.recDigits.reduce(function(a,b){return a+b},0),span=Math.max.apply(null,p.recDigits)-Math.min.apply(null,p.recDigits),odd=p.recDigits.filter(function(n){return n%2===1}).length,big=p.recDigits.filter(function(n){return n>=5}).length;
+  document.getElementById('recStats').innerHTML='<div class="stat-card"><div class="stat-value red">'+p.overallConf+'%</div><div class="stat-label">置信度</div></div><div class="stat-card"><div class="stat-value" style="color:#e74c3c">'+Math.round(p.recScores[0])+'%</div><div class="stat-label">百位评分</div></div><div class="stat-card"><div class="stat-value gold">'+Math.round(p.recScores[1])+'%</div><div class="stat-label">十位评分</div></div><div class="stat-card"><div class="stat-value blue">'+Math.round(p.recScores[2])+'%</div><div class="stat-label">个位评分</div></div><div class="stat-card"><div class="stat-value green">'+p.dudan.num+'</div><div class="stat-label">独胆('+POS_N[p.dudan.pos]+')</div></div><div class="stat-card"><div class="stat-value">'+p.meta.totalDraws+'</div><div class="stat-label">样本</div></div>';
+  var dh='';p.scores.forEach(function(scores,pi){dh+='<h4 style="margin:6px 0 4px;color:'+POS_C[pi]+'">'+POS_N[pi]+'</h4><table><thead><tr><th>#</th><th>号</th><th>评分</th><th>遗漏</th><th>频率</th><th>趋势</th><th>关联</th></tr></thead><tbody>';scores.slice(0,5).forEach(function(x,i){dh+='<tr><td><strong>#'+(i+1)+'</strong></td><td><span class="ball '+POS[pi]+'">'+x.num+'</span></td><td>'+x.score+'</td><td style="color:'+(x.omi>10?'#e74c3c':x.omi>5?'#f39c12':'#27ae60')+'">'+x.omi+'</td><td>'+x.freq+'</td><td>'+x.bd.tr+'</td><td>'+x.bd.cr+'</td></tr>'});dh+='</tbody></table>'});document.getElementById('recDetailTable').innerHTML=dh;
+  document.getElementById('recRationale').innerHTML='<p><strong>🎯 独胆 <span class="ball gold">'+p.dudan.num+'</span></strong>（'+POS_N[p.dudan.pos]+'最高分 '+p.dudan.score+'分）</p><p style="margin-top:4px">• 单式1注=2元 | 复式4×4×4=64注=<strong>128元</strong></p><p>• 特征：和值<strong>'+sum+'</strong> | 跨度<strong>'+span+'</strong> | 奇偶<strong>'+odd+':'+(3-odd)+'</strong> | 大小<strong>'+big+':'+(3-big)+'</strong></p><p style="color:var(--text2);font-size:0.65rem">⚠️ 统计参考</p>';
+}
+
+function renderKill(){if(!currentPrediction)return;var p=currentPrediction;['killBai','killShi','killGe'].forEach(function(id,i){document.getElementById(id).innerHTML=p.killPerPos[i].map(function(n){return'<span class="kill-ball">'+n+'</span>'}).join('')});['killBaiR','killShiR','killGeR'].forEach(function(id,i){document.getElementById(id).innerHTML=p.killPerPos[i].map(function(n){var x=p.scores[i].slice(-3).filter(function(y){return y.num===n})[0];return'<div>'+n+'：'+(x?x.score:'--')+'分 | 遗漏'+(x?x.omi:'--')+'期</div>'}).join('')})}
+function renderDantuo(){if(!currentPrediction)return;var p=currentPrediction;document.getElementById('dudanDisplay').innerHTML='<span class="ball xl gold" style="min-width:56px;height:56px;font-size:1.5rem">'+p.dudan.num+'</span><div style="margin-top:5px">'+POS_N[p.dudan.pos]+' · 评分<strong>'+p.dudan.score+'分</strong></div>';['baiDD','shiDD','geDD'].forEach(function(id,i){document.getElementById(id).innerHTML=p.dingdanPerPos[i].map(function(n){return'<span class="ball lg '+POS[i]+'">'+n+'</span>'}).join('')});document.getElementById('dadiGrid').innerHTML=p.dadiPerPos.map(function(dadi,pi){return'<div class="card"><div class="card-header" style="font-size:0.78rem;color:'+POS_C[pi]+'">'+POS_N[pi]+' 5码</div><div style="display:flex;gap:3px;flex-wrap:wrap;justify-content:center">'+dadi.map(function(n){return'<span class="ball '+POS[pi]+'">'+n+'</span>'}).join('')+'</div></div>'}).join('')}
+function renderFrequency(){var n=parseInt(document.getElementById('freqPeriod').value)||0,draws=n>0?allDraws.slice(0,n):allDraws;['baiBars','shiBars','geBars'].forEach(function(id,pi){var f={};for(var i=0;i<DIGIT_R;i++)f[i]=0;draws.forEach(function(d){f[d.digits[pi]]++});var mx=0;for(var i=0;i<DIGIT_R;i++)if(f[i]>mx)mx=f[i];var h='',cls=pi===0?'bai-bg':pi===1?'shi-bg':'ge-bg';for(var i=0;i<DIGIT_R;i++){var w=f[i]/Math.max(1,mx)*100;h+='<div class="bar-row"><span class="bar-label">'+i+'</span><div class="bar-track"><div class="bar-fill '+cls+'" style="width:'+w+'%">'+f[i]+'</div></div></div>'}document.getElementById(id).innerHTML=h});var rec=allDraws.slice(0,Math.min(30,allDraws.length));['baiHC','shiHC','geHC'].forEach(function(id,pi){var f={};for(var i=0;i<DIGIT_R;i++)f[i]=0;rec.forEach(function(d){f[d.digits[pi]]++});var s=Object.keys(f).map(function(k){return{n:parseInt(k),c:f[k]}}).sort(function(a,b){return b.c-a.c}),hot=s.slice(0,3).map(function(x){return x.n}).sort(function(a,b){return a-b}),warm=s.slice(3,7).map(function(x){return x.n}).sort(function(a,b){return a-b}),cold=s.slice(7).map(function(x){return x.n}).sort(function(a,b){return a-b});document.getElementById(id).innerHTML='<div style="margin-bottom:4px"><span class="hc-dot" style="background:linear-gradient(135deg,#c0392b,#e74c3c)"></span>热 ≥3 <div class="hc-balls-row">'+hot.map(function(n){return'<span class="hc-ball hot">'+n+'</span>'}).join('')+'</div></div><div style="margin-bottom:4px"><span class="hc-dot" style="background:linear-gradient(135deg,#e67e22,#f39c12)"></span>温 <div class="hc-balls-row">'+warm.map(function(n){return'<span class="hc-ball warm">'+n+'</span>'}).join('')+'</div></div><div><span class="hc-dot" style="background:linear-gradient(135deg,#2471a3,#3498db)"></span>冷 ≤1 <div class="hc-balls-row">'+cold.map(function(n){return'<span class="hc-ball cold">'+n+'</span>'}).join('')+'</div></div>'})}
+function renderTrend(){
+  var n=parseInt(document.getElementById('trendPeriod').value)||50,draws=allDraws.slice(0,n);
+  var omi=[new Array(DIGIT_R).fill(0),new Array(DIGIT_R).fill(0),new Array(DIGIT_R).fill(0)];
+  var freq=[new Array(DIGIT_R).fill(0),new Array(DIGIT_R).fill(0),new Array(DIGIT_R).fill(0)];
+  draws.forEach(function(dr){for(var pi=0;pi<3;pi++)freq[pi][dr.digits[pi]]++});
+  var h='<table><thead><tr><th>期号</th>';
+  for(var pi=0;pi<3;pi++)for(var d=0;d<DIGIT_R;d++)h+='<th style="color:'+POS_C[pi]+'">'+d+'</th>';
+  h+='</tr></thead><tbody>';
+  draws.forEach(function(dr,ri){
+    var rs=ri%2===1?' class="tr-alt"':'';
+    h+='<tr'+rs+'><td>'+dr.issue+'</td>';
+    for(var pi=0;pi<3;pi++)for(var x=0;x<DIGIT_R;x++){
+      if(dr.digits[pi]===x){h+='<td><span class="trend-cell trend-hit" style="background:'+POS_C[pi]+'">●</span></td>';omi[pi][x]=0}
+      else{h+='<td><span class="trend-cell trend-miss">·</span></td>';omi[pi][x]++}
+    }
+    h+='</tr>';
+  });
+  h+='<tr style="font-weight:800;background:var(--bg)"><td>遗漏</td>';
+  for(var pi=0;pi<3;pi++)for(var x=0;x<DIGIT_R;x++){
+    var o=omi[pi][x],os='';
+    if(o>=10)os='background:#e74c3c;color:#fff;font-weight:800';
+    else if(o>=7)os='color:#e74c3c;font-weight:800';
+    else if(o>=4)os='color:#f39c12;font-weight:700';
+    else os='color:#27ae60';
+    h+='<td style="'+os+';font-size:0.50rem">'+o+'</td>';
+  }
+  h+='</tr>';
+  h+='<tr style="font-weight:700;background:var(--bg)"><td>频次</td>';
+  for(var pi=0;pi<3;pi++)for(var x=0;x<DIGIT_R;x++){
+    h+='<td style="font-size:0.48rem;color:var(--text2)">'+freq[pi][x]+'</td>';
+  }
+  h+='</tr>';
+  h+='</tbody></table>';
+  document.getElementById('trendMatrix').innerHTML=h;
+}
+function renderOmission(){var draws=allDraws,N=draws.length,avg=N/DIGIT_R;function co(pi){var r=[];for(var n=0;n<DIGIT_R;n++){var f=false;for(var i=0;i<N;i++){if(draws[i].digits[pi]===n){r.push({num:n,omi:i,last:draws[i].issue});f=true;break}}if(!f)r.push({num:n,omi:N,last:'-'})}return r}function cm(pi){var mx={},cu={};for(var n=0;n<DIGIT_R;n++){mx[n]=0;cu[n]=0}draws.forEach(function(d){for(var n=0;n<DIGIT_R;n++){if(d.digits[pi]===n){mx[n]=Math.max(mx[n],cu[n]);cu[n]=0}else cu[n]++}});for(var n=0;n<DIGIT_R;n++)mx[n]=Math.max(mx[n],cu[n]);return mx}['omiBai','omiShi','omiGe'].forEach(function(id,pi){var d=co(pi),m=cm(pi),h='<table><thead><tr><th>号</th><th>遗漏</th><th>上次</th><th>平均</th><th>最大</th></tr></thead><tbody>';d.forEach(function(r){h+='<tr><td><span class="ball '+POS[pi]+'">'+r.num+'</span></td><td style="font-weight:800;color:'+(r.omi>10?'#e74c3c':r.omi>5?'#f39c12':'#27ae60')+'">'+r.omi+'</td><td>'+r.last+'</td><td>'+avg.toFixed(1)+'</td><td>'+(m[r.num]||0)+'</td></tr>'});h+='</tbody></table>';document.getElementById(id).innerHTML=h})}
+function renderIndicators(){var draws=allDraws.slice(0,Math.min(100,allDraws.length)),an=draws.map(function(d){var sum=d.digits.reduce(function(a,b){return a+b},0),span=Math.max.apply(null,d.digits)-Math.min.apply(null,d.digits),odd=d.digits.filter(function(n){return n%2===1}).length,big=d.digits.filter(function(n){return n>=5}).length;return{issue:d.issue,sum:sum,span:span,odd:odd,big:big}}),as=Math.round(an.reduce(function(s,a){return s+a.sum},0)/an.length),asp=(an.reduce(function(s,a){return s+a.span},0)/an.length).toFixed(1);document.getElementById('indStats').innerHTML='<div class="stat-card"><div class="stat-value red">'+as+'</div><div class="stat-label">均和值</div></div><div class="stat-card"><div class="stat-value blue">'+asp+'</div><div class="stat-label">均跨度</div></div><div class="stat-card"><div class="stat-value green">'+an.filter(function(a){return a.sum>=10&&a.sum<=17}).length+'</div><div class="stat-label">中和值</div></div><div class="stat-card"><div class="stat-value gold">'+an.filter(function(a){return a.odd>=1&&a.odd<=2}).length+'</div><div class="stat-label">均衡奇偶</div></div>';var l20=an.slice(0,20),dh='<table><thead><tr><th>期号</th><th>号码</th><th>和值</th><th>跨度</th><th>奇偶</th><th>大小</th></tr></thead><tbody>';l20.forEach(function(a,i){var d=draws[i];dh+='<tr><td>'+a.issue+'</td><td><span class="ball bai">'+d.digits[0]+'</span><span class="ball shi">'+d.digits[1]+'</span><span class="ball ge">'+d.digits[2]+'</span></td><td>'+a.sum+'</td><td>'+a.span+'</td><td>'+a.odd+':'+(3-a.odd)+'</td><td>'+a.big+':'+(3-a.big)+'</td></tr>'});dh+='</tbody></table>';document.getElementById('indDetail').innerHTML=dh}
+function renderFormTrend(){
+  var n=parseInt(document.getElementById('formPeriod').value)||50,draws=allDraws.slice(0,n);
+  var ROUTE0=[0,3,6,9],ROUTE1=[1,4,7],ROUTE2=[2,5,8],PRIMES=[2,3,5,7];
+  function route(x){return ROUTE0.indexOf(x)>=0?0:ROUTE1.indexOf(x)>=0?1:2}
+  function isPrime(x){return PRIMES.indexOf(x)>=0}
+  // Per-position 012路 tables
+  ['routeBai','routeShi','routeGe'].forEach(function(id,pi){
+    var h='<table><thead><tr><th>期号</th><th>号</th><th>路</th><th>形态</th></tr></thead><tbody>';
+    draws.forEach(function(d){var x=d.digits[pi],r=route(x);h+='<tr><td>'+d.issue+'</td><td><span class="ball '+['bai','shi','ge'][pi]+'" style="min-width:20px;height:20px;font-size:0.55rem">'+x+'</span></td><td class="route-'+r+'">'+r+'路</td><td>'+(isPrime(x)?'<span class="fs-gold">质</span>':'<span class="fs-green">合</span>')+' '+(x%2===1?'<span class="fs-red">奇</span>':'<span class="fs-blue">偶</span>')+' '+(x>=5?'<span class="fs-purple">大</span>':'<span class="fs-gray">小</span>')+'</td></tr>'});h+='</tbody></table>';document.getElementById(id).innerHTML=h;
+  });
+  // Summary stats
+  var o=0,e2=0,b=0,s2=0,p=0,c2=0,total=n*3;draws.forEach(function(d){d.digits.forEach(function(x){if(x%2===1)o++;else e2++;if(x>=5)b++;else s2++;if(isPrime(x))p++;else c2++})});
+  document.getElementById('oeStats3D').innerHTML='<div class="stat-card"><div class="stat-value"><span class="fs-red">'+o+'</span>:<span class="fs-blue">'+e2+'</span></div><div class="stat-label">奇:偶</div></div><div class="stat-card"><div class="stat-value">'+(o/total*100).toFixed(0)+'%</div><div class="stat-label">奇%</div></div><div class="stat-card"><div class="stat-value">'+(e2/total*100).toFixed(0)+'%</div><div class="stat-label">偶%</div></div>';
+  document.getElementById('bsStats3D').innerHTML='<div class="stat-card"><div class="stat-value"><span class="fs-purple">'+b+'</span>:<span class="fs-gray">'+s2+'</span></div><div class="stat-label">大:小</div></div><div class="stat-card"><div class="stat-value">'+(b/total*100).toFixed(0)+'%</div><div class="stat-label">大%</div></div><div class="stat-card"><div class="stat-value">'+(s2/total*100).toFixed(0)+'%</div><div class="stat-label">小%</div></div>';
+  document.getElementById('pcStats3D').innerHTML='<div class="stat-card"><div class="stat-value"><span class="fs-gold">'+p+'</span>:<span class="fs-green">'+c2+'</span></div><div class="stat-label">质:合</div></div><div class="stat-card"><div class="stat-value">'+(p/total*100).toFixed(0)+'%</div><div class="stat-label">质%</div></div><div class="stat-card"><div class="stat-value">'+(c2/total*100).toFixed(0)+'%</div><div class="stat-label">合%</div></div>';
+  // Detail table for last 30 draws
+  var d30=draws.slice(0,Math.min(30,n)),dh='<table><thead><tr><th>期号</th><th>百</th><th>十</th><th>个</th><th>012路</th><th>奇偶</th><th>大小</th><th>质合</th></tr></thead><tbody>';
+  d30.forEach(function(d){dh+='<tr><td>'+d.issue+'</td><td class="route-'+route(d.digits[0])+'">'+d.digits[0]+'</td><td class="route-'+route(d.digits[1])+'">'+d.digits[1]+'</td><td class="route-'+route(d.digits[2])+'">'+d.digits[2]+'</td><td>'+route(d.digits[0])+''+route(d.digits[1])+''+route(d.digits[2])+'</td><td>'+(d.digits.filter(function(x){return x%2===1}).length)+'奇'+(d.digits.filter(function(x){return x%2===0}).length)+'偶</td><td>'+(d.digits.filter(function(x){return x>=5}).length)+'大'+(d.digits.filter(function(x){return x<=4}).length)+'小</td><td>'+(d.digits.filter(function(x){return isPrime(x)}).length)+'质'+(d.digits.filter(function(x){return !isPrime(x)}).length)+'合</td></tr>'});dh+='</tbody></table>';document.getElementById('formDetail3D').innerHTML=dh;
+}
+function smartGenerate(count){if(!currentPrediction)currentPrediction=generateRecommendation();if(!currentPrediction)return;var p=currentPrediction,res=[];for(var c=0;c<count;c++){var digits=[];for(var pi=0;pi<3;pi++){var av=p.scores[pi].slice();if(!av||!av.length)break;var rr=Math.random()*av.reduce(function(a,b){return a+b.score},0),cum=0,pk=av[0];for(var i=0;i<av.length;i++){cum+=av[i].score;if(rr<=cum){pk=av[i];break}}digits.push(pk.num)}res.push({digits:digits})}var h='';res.forEach(function(r,i){h+='<div class="gen-set"><span style="font-weight:800;min-width:30px">#'+(i+1)+'</span><span class="ball bai">'+r.digits[0]+'</span><span class="ball shi">'+r.digits[1]+'</span><span class="ball ge">'+r.digits[2]+'</span><span style="font-size:0.6rem;color:var(--text2)">和'+r.digits.reduce(function(a,b){return a+b},0)+'</span></div>'});document.getElementById('genDisplay').innerHTML=h;res.forEach(function(r){genHistory.unshift({digits:r.digits,time:new Date().toLocaleString()});if(genHistory.length>30)genHistory.pop()});renderGenHistory()}
+function renderGenHistory(){var c=document.getElementById('genHistory');if(!genHistory.length){c.innerHTML='<p style="color:var(--text2)">暂无</p>';return}c.innerHTML=genHistory.map(function(g,i){return'<div class="gen-set"><span style="font-weight:800;min-width:22px">#'+(i+1)+'</span><span class="ball bai">'+g.digits[0]+'</span><span class="ball shi">'+g.digits[1]+'</span><span class="ball ge">'+g.digits[2]+'</span><span style="font-size:0.55rem;color:var(--text2);margin-left:3px">'+g.time+'</span></div>'}).join('')}
+
+function renderGroup(){
+  if(!currentPrediction)currentPrediction=generateRecommendation();if(!currentPrediction)return;
+  var p=currentPrediction,draws=allDraws.slice(0,Math.min(50,allDraws.length));
+
+  // Count 组三/组六/豹子 in recent 30 draws
+  var r30=draws.slice(0,30),gs3=0,gs6=0,bz=0;
+  r30.forEach(function(d){var s=new Set(d.digits);if(s.size===1)bz++;else if(s.size===2)gs3++;else gs6++});
+  document.getElementById('gs3Rate').textContent=gs3+'次 ('+(gs3/30*100).toFixed(0)+'%)';
+  document.getElementById('gs6Rate').textContent=gs6+'次 ('+(gs6/30*100).toFixed(0)+'%)';
+
+  // 组三推荐: find digit that appears most as paired in recent draws
+  var pairCount={};for(var i=0;i<10;i++)pairCount[i]=0;
+  r30.forEach(function(d){if(new Set(d.digits).size===2){var arr=d.digits.slice().sort();if(arr[0]===arr[1])pairCount[arr[0]]++;else if(arr[1]===arr[2])pairCount[arr[1]]++}});
+  var pairDigits=Object.entries(pairCount).sort(function(a,b){return b[1]-a[1]}).slice(0,3).map(function(x){return parseInt(x[0])});
+
+  // Single digit: highest scoring digit that's NOT in pairDigits
+  var allScores=p.scores[0].concat(p.scores[1]).concat(p.scores[2]);
+  var singleCandidates=allScores.filter(function(x){return pairDigits.indexOf(x.num)<0}).sort(function(a,b){return b.score-a.score});
+  var singleDigit=singleCandidates[0]?singleCandidates[0].num:0;
+
+  // Show top 3 组三 combos
+  var gs3HTML='<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">';
+  pairDigits.forEach(function(pd){
+    gs3HTML+='<div style="background:var(--bg);padding:10px 14px;border-radius:10px;text-align:center"><div style="font-size:1.2rem;font-weight:800">'+pd+''+pd+''+singleDigit+'</div><div style="font-size:0.55rem;color:var(--text2)">对子'+pd+' + 单'+singleDigit+'</div></div>';
+  });
+  gs3HTML+='</div>';
+  document.getElementById('gs3Display').innerHTML=gs3HTML;
+  document.getElementById('gs3Reason').innerHTML='对子号：'+pairDigits.join(',')+' 近期组三中重复最多；单号：'+singleDigit+' 综合评分最高';
+
+  // 组六推荐: top digit per position, ensure all different
+  var posTops=p.scores.map(function(s){return s[0].num});
+  // If duplicates, adjust
+  if(posTops[0]===posTops[1]||posTops[0]===posTops[2]||posTops[1]===posTops[2]){
+    for(var pi=0;pi<3;pi++){
+      for(var si=0;si<p.scores[pi].length;si++){
+        var cand=p.scores[pi][si].num;
+        if(posTops.filter(function(n,i){return i!==pi&&n===cand}).length===0){posTops[pi]=cand;break}
+      }
+    }
+  }
+  var gs6HTML='<div style="font-size:1.3rem;font-weight:800;text-align:center;margin:8px 0">';
+  gs6HTML+='<span class="ball bai lg">'+posTops[0]+'</span><span class="ball shi lg">'+posTops[1]+'</span><span class="ball ge lg">'+posTops[2]+'</span>';
+  gs6HTML+='</div>';
+  document.getElementById('gs6Display').innerHTML=gs6HTML;
+  document.getElementById('gs6Reason').innerHTML='百位最优：'+posTops[0]+' 十位最优：'+posTops[1]+' 个位最优：'+posTops[2]+' | 三个号码各不相同，组六型';
+
+  // 形态走势表
+  var gt='<table><thead><tr><th>期号</th><th>号码</th><th>类型</th><th>和值</th><th>跨度</th><th>奇偶</th></tr></thead><tbody>';
+  r30.forEach(function(d){
+    var s=new Set(d.digits),type=s.size===1?'<span style="color:#8e44ad;font-weight:800">豹子</span>':s.size===2?'<span style="color:#e74c3c;font-weight:800">组三</span>':'<span style="color:#2980b9;font-weight:800">组六</span>';
+    var sum=d.digits.reduce(function(a,b){return a+b},0),span=Math.max.apply(null,d.digits)-Math.min.apply(null,d.digits);
+    var odd=d.digits.filter(function(n){return n%2===1}).length;
+    gt+='<tr><td>'+d.issue+'</td><td>'+d.digits.join('')+'</td><td>'+type+'</td><td>'+sum+'</td><td>'+span+'</td><td>'+odd+'奇'+(3-odd)+'偶</td></tr>';
+  });
+  gt+='</tbody></table>';
+  document.getElementById('groupTrend').innerHTML=gt;
+}
+
+function renderReport(){
+  autoMatch();savePredictions();
+  var d=allDraws.slice(0,Math.min(50,allDraws.length));
+  var N=d.length;
+  if(!predictionHistory.length){document.getElementById('reportContent').innerHTML='<div class="card" style="text-align:center;padding:40px;color:var(--text2)"><p>📊 暂无预测记录</p><p style="font-size:0.7rem">请先保存几期预测后再查看报告</p></div>';return}
+
+  // 1. 杀号统计
+  var killTotal=0,killCorrect=0,killPerPos=[[0,0],[0,0],[0,0]]; // [total, correct] x3
+  var killHistory=[];
+  predictionHistory.forEach(function(ph){
+    if(!ph.killDigits||ph.killHits[0]<0)return;
+    for(var p=0;p<3;p++){
+      var t=ph.killDigits[p].length,c=ph.killHits[p];
+      killTotal+=t;killCorrect+=c;
+      killPerPos[p][0]+=t;killPerPos[p][1]+=c;
+    }
+    killHistory.push({issue:ph.issue,kills:ph.killDigits,hits:ph.killHits,total:ph.killDigits[0].length+ph.killDigits[1].length+ph.killDigits[2].length,cHits:ph.killHits[0]+ph.killHits[1]+ph.killHits[2]});
+  });
+  var killRate=killTotal>0?(killCorrect/killTotal*100).toFixed(1):'--';
+
+  // 2. 定胆/预测统计
+  var predTotal=0,predHits=0,predPerPos=[[0,0],[0,0],[0,0]];
+  var predHistory=[];
+  predictionHistory.forEach(function(ph){
+    if(!ph.actualDigits||ph.totalHits<0)return;
+    for(var p=0;p<3;p++){
+      predTotal++;predHits+=ph.digits[p]===ph.actualDigits[p]?1:0;
+      predPerPos[p][0]++;predPerPos[p][1]+=ph.digits[p]===ph.actualDigits[p]?1:0;
+    }
+    predHistory.push({issue:ph.issue,pred:ph.digits,act:ph.actualDigits,hits:ph.totalHits});
+  });
+  var predRate=predTotal>0?(predHits/predTotal*100).toFixed(1):'--';
+
+  // 3. 012路统计
+  var route0=[0,3,6,9],route1=[1,4,7],route2=[2,5,8];
+  function getRoute(n){return route0.indexOf(n)>=0?0:route1.indexOf(n)>=0?1:2}
+  var routeCount=[[0,0,0],[0,0,0],[0,0,0]]; // [pos][route]
+  var routeSeq=[[],[],[]];
+  d.forEach(function(dr){for(var p=0;p<3;p++){var r=getRoute(dr.digits[p]);routeCount[p][r]++;routeSeq[p].push(r)}});
+
+  // 4. 方法有效性评估
+  var recentKillRates=[];
+  for(var i=killHistory.length-10;i<killHistory.length;i++){
+    if(i>=0){var kh=killHistory[i];recentKillRates.push(kh.total>0?(kh.cHits/kh.total*100):0)}
+  }
+  var killTrend=recentKillRates.length>=5?(recentKillRates.slice(-5).reduce(function(a,b){return a+b},0)/5).toFixed(1):'--';
+  var killWarning=parseFloat(killTrend)<50?'<span style="color:#e74c3c">⚠️ 近5期杀号准确率低于50%，该方法有效性正在下降，建议重新评估杀号策略</span>':'<span style="color:#27ae60">✅ 杀号方法表现稳定</span>';
+
+  // 5. 组三组六统计
+  var gs3=0,gs6=0,bz=0;
+  d.forEach(function(dr){var s=new Set(dr.digits);if(s.size===1)bz++;else if(s.size===2)gs3++;else gs6++});
+
+  // 输出报告
+  var h='<div class="disclaimer">📊 基于'+predictionHistory.length+'条预测记录和'+N+'期开奖数据的综合分析报告。仅供统计参考。</div>';
+
+  // 统计卡片
+  h+='<div class="stat-grid"><div class="stat-card"><div class="stat-value red">'+killRate+'%</div><div class="stat-label">杀号累计准确率</div></div><div class="stat-card"><div class="stat-value" style="color:#2980b9">'+predRate+'%</div><div class="stat-label">预测累计命中率</div></div><div class="stat-card"><div class="stat-value gold">'+predictionHistory.length+'</div><div class="stat-label">总预测期数</div></div><div class="stat-card"><div class="stat-value green">'+N+'</div><div class="stat-label">分析样本</div></div></div>';
+
+  // 杀号报告
+  h+='<div class="card"><div class="card-header">❌ 杀号准确率分析</div>';
+  h+='<p style="margin-bottom:8px">累计：<strong>'+killCorrect+'/'+killTotal+'</strong> = '+killRate+'% | 百位：'+(killPerPos[0][0]>0?(killPerPos[0][1]/killPerPos[0][0]*100).toFixed(1)+'%':'--')+' | 十位：'+(killPerPos[1][0]>0?(killPerPos[1][1]/killPerPos[1][0]*100).toFixed(1)+'%':'--')+' | 个位：'+(killPerPos[2][0]>0?(killPerPos[2][1]/killPerPos[2][0]*100).toFixed(1)+'%':'--')+'</p>';
+  h+='<p style="font-size:0.75rem;margin-bottom:4px">近5期均准确率：<strong>'+killTrend+'%</strong> '+killWarning+'</p>';
+  h+='<div class="table-wrap"><table><thead><tr><th>期号</th><th>百位杀</th><th>十位杀</th><th>个位杀</th><th>百位准</th><th>十位准</th><th>个位准</th><th>合计</th></tr></thead><tbody>';
+  killHistory.slice(-15).reverse().forEach(function(kh){
+    h+='<tr><td>'+kh.issue+'</td><td>'+kh.kills[0].join(',')+'</td><td>'+kh.kills[1].join(',')+'</td><td>'+kh.kills[2].join(',')+'</td><td style="color:'+(kh.hits[0]>=kh.kills[0].length*0.7?'#27ae60':'#e74c3c')+'">'+kh.hits[0]+'/'+kh.kills[0].length+'</td><td style="color:'+(kh.hits[1]>=kh.kills[1].length*0.7?'#27ae60':'#e74c3c')+'">'+kh.hits[1]+'/'+kh.kills[1].length+'</td><td style="color:'+(kh.hits[2]>=kh.kills[2].length*0.7?'#27ae60':'#e74c3c')+'">'+kh.hits[2]+'/'+kh.kills[2].length+'</td><td><strong>'+kh.cHits+'/'+kh.total+'</strong></td></tr>';
+  });
+  h+='</tbody></table></div></div>';
+
+  // 定胆/预测报告
+  h+='<div class="card"><div class="card-header">💎 预测命中率分析</div>';
+  h+='<p style="margin-bottom:8px">累计命中：<strong>'+predHits+'/'+predTotal+'</strong> = '+predRate+'% | 百位：'+(predPerPos[0][0]>0?(predPerPos[0][1]/predPerPos[0][0]*100).toFixed(1)+'%':'--')+' | 十位：'+(predPerPos[1][0]>0?(predPerPos[1][1]/predPerPos[1][0]*100).toFixed(1)+'%':'--')+' | 个位：'+(predPerPos[2][0]>0?(predPerPos[2][1]/predPerPos[2][0]*100).toFixed(1)+'%':'--')+'</p>';
+  h+='<div class="table-wrap"><table><thead><tr><th>期号</th><th>预测</th><th>实际</th><th>百</th><th>十</th><th>个</th><th>命中</th></tr></thead><tbody>';
+  predHistory.slice(-15).reverse().forEach(function(ph){
+    h+='<tr><td>'+ph.issue+'</td><td><span class="ball bai">'+ph.pred[0]+'</span><span class="ball shi">'+ph.pred[1]+'</span><span class="ball ge">'+ph.pred[2]+'</span></td><td>'+ph.act.join('')+'</td><td style="color:'+(ph.pred[0]===ph.act[0]?'#27ae60':'#e74c3c')+'">'+(ph.pred[0]===ph.act[0]?'✓':'✗')+'</td><td style="color:'+(ph.pred[1]===ph.act[1]?'#27ae60':'#e74c3c')+'">'+(ph.pred[1]===ph.act[1]?'✓':'✗')+'</td><td style="color:'+(ph.pred[2]===ph.act[2]?'#27ae60':'#e74c3c')+'">'+(ph.pred[2]===ph.act[2]?'✓':'✗')+'</td><td><strong style="color:'+(ph.hits>=2?'#27ae60':ph.hits>=1?'#f39c12':'#e74c3c')+'">'+ph.hits+'/3</strong></td></tr>';
+  });
+  h+='</tbody></table></div></div>';
+
+  // 012路报告
+  h+='<div class="card"><div class="card-header">📐 012路走势分析（近'+N+'期）</div>';
+  var posNames=['百位','十位','个位'];
+  for(var p=0;p<3;p++){
+    var rt=routeCount[p],total=rt[0]+rt[1]+rt[2];
+    h+='<div style="margin-bottom:10px"><strong>'+posNames[p]+'：</strong>0路'+(rt[0]/total*100).toFixed(0)+'%('+rt[0]+'次) | 1路'+(rt[1]/total*100).toFixed(0)+'%('+rt[1]+'次) | 2路'+(rt[2]/total*100).toFixed(0)+'%('+rt[2]+'次)</div>';
+    h+='<div style="font-family:monospace;font-size:0.72rem;line-height:2;word-break:break-all;background:var(--bg);padding:8px;border-radius:6px">';
+    routeSeq[p].slice(0,30).forEach(function(r,i){
+      var color=r===0?'#e74c3c':r===1?'#2980b9':'#27ae60';
+      h+='<span style="color:'+color+';font-weight:700;margin:0 2px">'+r+'</span>';
+    });
+    h+=' <span style="color:var(--text2);font-size:0.6rem">←最新</span></div>';
+  }
+  h+='</div>';
+
+  // 组三组六统计
+  h+='<div class="card"><div class="card-header">🎯 组选形态统计（近'+N+'期）</div>';
+  h+='<div class="stat-grid"><div class="stat-card"><div class="stat-value" style="color:#2980b9">'+gs6+'</div><div class="stat-label">组六 ('+(gs6/N*100).toFixed(0)+'%)</div></div><div class="stat-card"><div class="stat-value" style="color:#e74c3c">'+gs3+'</div><div class="stat-label">组三 ('+(gs3/N*100).toFixed(0)+'%)</div></div><div class="stat-card"><div class="stat-value" style="color:#8e44ad">'+bz+'</div><div class="stat-label">豹子 ('+(bz/N*100).toFixed(0)+'%)</div></div></div></div>';
+
+  // 方法评估
+  h+='<div class="card"><div class="card-header">📈 方法有效性评估</div>';
+  h+='<p style="line-height:2;font-size:0.78rem">';
+  h+='<strong>杀号方法：</strong>'+killWarning+'<br>';
+  var predTrend=predHistory.length>=10?(predHistory.slice(-10).filter(function(x){return x.hits>=2}).length/10*100).toFixed(0):'--';
+  h+='<strong>预测稳定性：</strong>近10期命中≥2位的占比 <strong>'+(predTrend!=='--'?predTrend+'%':'数据不足')+'</strong><br>';
+  h+='<strong>012路偏差：</strong>';
+  for(var p=0;p<3;p++){
+    var rt2=routeCount[p],t2=rt2[0]+rt2[1]+rt2[2];
+    var maxRoute=rt2[0]>=rt2[1]&&rt2[0]>=rt2[2]?'0路':rt2[1]>=rt2[2]?'1路':'2路';
+    var maxPct=(Math.max.apply(null,rt2)/t2*100).toFixed(0);
+    h+=posNames[p]+'偏向<strong>'+maxRoute+'</strong>('+maxPct+'%) ';
+  }
+  h+='</p>';
+  h+='<p style="margin-top:8px;font-size:0.65rem;color:var(--text2)">⚠️ 以上分析仅基于历史统计，不构成投注建议。彩票开奖为独立随机事件。</p>';
+  h+='</div>';
+
+  document.getElementById('reportContent').innerHTML=h;
+}
+
+function switchTab(id){
+  document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('active')});document.querySelectorAll('.tab-content').forEach(function(s){s.classList.remove('active')});
+  var btn=document.querySelector('[data-tab="'+id+'"]');if(btn)btn.classList.add('active');var el=document.getElementById('tab-'+id);if(!el)return;el.classList.add('active');
+  switch(id){case'rec':renderRecommendation();break;case'kill':renderKill();break;case'dantuo':renderDantuo();break;case'freq':renderFrequency();break;case'trend':renderTrend();break;case'omi':renderOmission();break;case'indicator':renderIndicators();break;case'form':renderFormTrend();break;case'gen':renderGenHistory();break;case'group':renderGroup();break;case'pick':buildPickGrids();break;case'history':renderHistory();break;case'report':renderReport();break;case'backtest':break;case'about':break}
+}
+function toggleTheme(){document.body.classList.toggle('dark-mode');var d=document.body.classList.contains('dark-mode');document.getElementById('themeBtn').textContent=d?'☀️':'🌙';try{localStorage.setItem(STORAGE_TH,d?'dark':'light')}catch(e){}}
+function refreshAll(){currentPrediction=generateRecommendation();var el=document.querySelector('.tab-content.active');if(el){var id=el.id.replace('tab-','');if(id==='rec')renderRecommendation();else if(id==='pick')buildPickGrids()};fetchLiveData().then(function(live){if(live&&live.length>50){allDraws=live;setCache(live);setBadge('live',allDraws.length+'期·实时·最新'+allDraws[0].issue);currentPrediction=generateRecommendation();var el2=document.querySelector('.tab-content.active');if(el2){var id2=el2.id.replace('tab-','');switchTab(id2)}}}).catch(function(){})}
+function init(){
+  try{var st=localStorage.getItem(STORAGE_TH);if(st==='dark'||(!st&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.body.classList.add('dark-mode');document.getElementById('themeBtn').textContent='☀️'}}catch(e){}
+  document.querySelectorAll('.tab-btn').forEach(function(b){b.addEventListener('click',function(){switchTab(b.dataset.tab)})});
+  loadData();loadPredictions();autoSavePrediction();currentPrediction=generateRecommendation();renderRecommendation();
+}
+if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',init)}else{init()}
+</script>
+</body>
+</html>

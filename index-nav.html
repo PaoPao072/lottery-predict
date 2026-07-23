@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>彩票数据预测系统 | 多因子统计模型</title>
+<style>
+:root{--bg:#0d1117;--card-bg:#161b22;--text:#e6edf3;--text2:#8b949e;--border:#30363d;--primary:#c0392b;--accent:#2980b9;--gold:#f39c12;--green:#27ae60;--purple:#8e44ad;--radius:16px}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.container{max-width:960px;width:100%}
+.hero{text-align:center;margin-bottom:40px}
+.hero h1{font-size:2rem;font-weight:900;background:linear-gradient(135deg,#c0392b,#f39c12,#8e44ad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero p{color:var(--text2);margin-top:8px;font-size:0.9rem}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px}
+.card{background:var(--card-bg);border-radius:var(--radius);padding:28px 24px;border:1px solid var(--border);text-decoration:none;color:var(--text);transition:all 0.25s;position:relative;overflow:hidden}
+.card:hover{transform:translateY(-4px);box-shadow:0 12px 40px rgba(0,0,0,0.3);border-color:var(--accent)}
+.card:hover .card-arrow{transform:translateX(4px)}
+.card-icon{font-size:2.5rem;margin-bottom:12px}
+.card h2{font-size:1.2rem;font-weight:800;margin-bottom:4px}
+.card .tag{display:inline-block;padding:2px 8px;border-radius:10px;font-size:0.6rem;font-weight:700;margin-bottom:10px}
+.tag-ssq{background:rgba(192,57,43,0.2);color:#e74c3c}.tag-dlt{background:rgba(142,68,173,0.2);color:#9b59b6}.tag-3d{background:rgba(243,156,18,0.2);color:#f1c40f}
+.card p{font-size:0.75rem;color:var(--text2);line-height:1.6}
+.card-arrow{display:inline-block;margin-top:12px;font-size:0.85rem;font-weight:700;transition:transform 0.2s}
+.card-ssq .card-arrow{color:#e74c3c}.card-dlt .card-arrow{color:#9b59b6}.card-3d .card-arrow{color:#f39c12}
+.features{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.ft{font-size:0.58rem;padding:2px 6px;border-radius:4px;background:rgba(255,255,255,0.04);color:var(--text2)}
+.footer{text-align:center;margin-top:40px;font-size:0.65rem;color:var(--text2);line-height:1.8}
+.footer .disclaimer{background:rgba(192,57,43,0.1);border:1px solid rgba(192,57,43,0.2);padding:10px 16px;border-radius:10px;display:inline-block}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="hero">
+    <h1>彩票数据预测系统</h1>
+    <p>多因子统计模型 · 纯前端 · 零依赖 · 开源透明</p>
+  </div>
+
+  <div class="cards">
+    <a href="index.html" class="card card-ssq">
+      <div class="card-icon">🔮</div>
+      <span class="tag tag-ssq">双色球</span>
+      <h2>SSQ 双色球预测</h2>
+      <p>8因子综合评分模型 · 红球33选6+蓝球16选1 · 每周二/四/日开奖</p>
+      <div class="features">
+        <span class="ft">复式7+3~15+5</span><span class="ft">胆拖投注</span><span class="ft">走势连线</span><span class="ft">200期数据</span>
+      </div>
+      <span class="card-arrow">进入 →</span>
+    </a>
+
+    <a href="大乐透/index.html" class="card card-dlt">
+      <div class="card-icon">💎</div>
+      <span class="tag tag-dlt">大乐透</span>
+      <h2>DLT 大乐透预测</h2>
+      <p>量子启发概率融合模型 · 前区35选5+后区12选2 · 每周一/三/六开奖</p>
+      <div class="features">
+        <span class="ft">复式6+3~12+4</span><span class="ft">胆拖投注</span><span class="ft">走势连线</span><span class="ft">231期数据</span>
+      </div>
+      <span class="card-arrow">进入 →</span>
+    </a>
+
+    <a href="福彩3D/index.html" class="card card-3d">
+      <div class="card-icon">🎲</div>
+      <span class="tag tag-3d">福彩3D</span>
+      <h2>FC3D 福彩3D预测</h2>
+      <p>位置独立7因子模型 · 百/十/个位各0-9 · 组三+组六 · 每天开奖</p>
+      <div class="features">
+        <span class="ft">组三组六推荐</span><span class="ft">复式4×4×4</span><span class="ft">012路走势</span><span class="ft">200期数据</span>
+      </div>
+      <span class="card-arrow">进入 →</span>
+    </a>
+  </div>
+
+  <div class="footer">
+    <div class="disclaimer">
+      ⚠️ <strong>彩票开奖是独立随机事件</strong>，任何统计模型均无法预测未来结果<br>
+      本系统仅供学术研究和娱乐参考，不构成投注建议，请理性购彩
+    </div>
+    <p style="margin-top:12px">数据来源：cwl.gov.cn / 500.com | 内置200+期真实开奖数据 | 本地缓存1小时</p>
+  </div>
+</div>
+</body>
+</html>
