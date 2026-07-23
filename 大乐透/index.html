@@ -1073,7 +1073,7 @@ function smartGenerate(count){
     }
     bsel.sort(function(a,b){return a-b});res.push({front:sel,back:bsel});
   }
-  var h="";res.forEach(function(r,i){h+="<div class="gen-set"><span style="font-weight:800;min-width:30px">#"+(i+1)+"</span>"+r.front.map(function(n){return ball("front","",n)}).join("")+"<span style="margin:0 3px">＋</span>"+r.back.map(function(n){return ball("back","",n)}).join("")+"</div>"});document.getElementById("genDisplay").innerHTML=h;
+  var h='';res.forEach(function(r,i){h+='<div class="gen-set"><span style="font-weight:800;min-width:30px">#'+(i+1)+'</span>'+r.front.map(function(n){return ball('front','',n)}).join('')+'<span style="margin:0 3px">＋</span>'+r.back.map(function(n){return ball('back','',n)}).join('')+'</div>'});document.getElementById('genDisplay').innerHTML=h;
   res.forEach(function(r){genHistory.unshift({front:r.front,back:r.back,time:new Date().toLocaleString()});if(genHistory.length>20)genHistory.pop()});renderGenHistory();
 }
 function renderGenHistory(){
