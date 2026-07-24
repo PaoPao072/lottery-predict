@@ -35,7 +35,7 @@ async function fetch3D(){
     var raw=await fetch('https://www.cwl.gov.cn/cwl_admin/front/cwlkj/search/kjxx/findDrawNotice?name=3d&issueCount=200');
     var j=JSON.parse(raw);
     if(j&&j.result&&j.result.length>50){
-      var draws=j.result.map(function(x){return{issue:x.code,date:x.date,digits:[parseInt(x.red.charAt(0)),parseInt(x.red.charAt(1)),parseInt(x.red.charAt(2))]}});
+      var draws=j.result.map(function(x){return{issue:x.code,date:x.date,digits:x.red.split(',').map(Number)}});
       save('3d',draws);return draws;
     }
   }catch(e){console.log('❌ 3D:',e.message)}
