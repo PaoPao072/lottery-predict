@@ -277,6 +277,7 @@ function setBadge(type,msg){
   i.textContent=msg;
 }
 
+function tryParseJSON(text){try{var d=JSON.parse(text);return Array.isArray(d)&&d.length>10?d:null}catch(e){return null}}
 function tryParseCWL(text){
   try{var d=JSON.parse(text);if(d&&d.result)return d.result.map(function(x){return{issue:x.code,date:(x.date||'').replace(/\(.\)/,''),red:(x.red||'').split(',').map(Number).filter(function(n){return n>=1&&n<=33}).sort(function(a,b){return a-b}),blue:parseInt(x.blue)||0}}).filter(function(x){return x.red.length===6&&x.blue>=1&&x.blue<=16})}catch(e){return null}
 }
@@ -299,17 +300,21 @@ function fetchOne(url,parser){
 }
 
 async function fetchLiveData(){
-  // 优先走本地代理（最可靠）
-  var localR=await fetchOne('http://localhost:8888/fetch?name=ssq',tryParseCWL);
+  // 1. 同源JSON（GitHub Actions自动更新，任何设备/网络均可用）
+  var r0=await fetchOne("../data/ssq.json",tryParseJSON);if(r0&&r0.length>50)return r0;
+  // 2. 相对路径代理（同源）
+  var r1=await fetchOne("/fetch?name=ssq",tryParseCWL);if(r1&&r1.length>50)return r1;
+  // 3. 本地代理
+  var localR=await fetchOne("http://localhost:8888/fetch?name=ssq",tryParseCWL);
   if(localR&&localR.length>50) return localR;
-  // 回退到CORS代理
-  var url='https://www.cwl.gov.cn/cwl_admin/front/cwlkj/search/kjxx/findDrawNotice?name=ssq&issueCount=100';
+  // 4. 局域网IP
+  var r3=await fetchOne("http://10.0.0.150:8888/fetch?name=ssq",tryParseCWL);if(r3&&r3.length>50)return r3;
+  // 5. CORS代理兜底
+  var url="https://www.cwl.gov.cn/cwl_admin/front/cwlkj/search/kjxx/findDrawNotice?name=ssq&issueCount=100";
   var r=await fetchOne(url,tryParseCWL);
   if(r&&r.length>50) return r;
   return null;
-}
-
-function getCached(){try{var ts=localStorage.getItem(STORAGE_TS);if(ts&&(Date.now()-parseInt(ts))<CACHE_TTL){var r=localStorage.getItem(STORAGE_CACHE);if(r){var d=JSON.parse(r);if(Array.isArray(d)&&d.length>10)return d}}}catch(e){}return null}
+}function getCached(){try{var ts=localStorage.getItem(STORAGE_TS);if(ts&&(Date.now()-parseInt(ts))<CACHE_TTL){var r=localStorage.getItem(STORAGE_CACHE);if(r){var d=JSON.parse(r);if(Array.isArray(d)&&d.length>10)return d}}}catch(e){}return null}
 function setCache(d){try{localStorage.setItem(STORAGE_CACHE,JSON.stringify(d));localStorage.setItem(STORAGE_TS,Date.now().toString())}catch(e){}}
 
 async function loadData(){

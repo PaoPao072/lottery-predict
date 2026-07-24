@@ -500,6 +500,7 @@ function setBadge(type,msg){
 /* ==================================================================
    DATA FETCH (CWL API + CORS PROXIES)
    ================================================================== */
+function tryParseJSON(text){try{var d=JSON.parse(text);return Array.isArray(d)&&d.length>10?d:null}catch(e){return null}}
 function tryParseDlt(text){
   try{var d=JSON.parse(text);if(d&&d.result)return d.result.map(function(x){var front=(x.red||'').split(',').map(Number).filter(function(n){return n>=1&&n<=35}).sort(function(a,b){return a-b});var back=(x.blue||'').split(',').map(Number).filter(function(n){return n>=1&&n<=12}).sort(function(a,b){return a-b});return front.length===5&&back.length===2?{issue:x.code,date:(x.date||'').replace(/\(.\)/,''),front:front,back:back}:null}).filter(Boolean)}catch(e){return null}
 }
@@ -514,8 +515,10 @@ function fetchOne(url,parser){
 }
 
 async function fetchLiveData(){
-  var localR=await fetchOne('http://localhost:8888/fetch?name=dlt',tryParseDlt);
-  if(localR&&localR.length>50) return localR;
+  var r0=await fetchOne('../data/dlt.json',tryParseJSON);if(r0&&r0.length>50)return r0;
+  var r1=await fetchOne('/fetch?name=dlt',tryParseDlt);if(r1&&r1.length>50)return r1;
+  var r2=await fetchOne('http://localhost:8888/fetch?name=dlt',tryParseDlt);if(r2&&r2.length>50)return r2;
+  var r3=await fetchOne('http://10.0.0.150:8888/fetch?name=dlt',tryParseDlt);if(r3&&r3.length>50)return r3;
   return await fetchOne('https://www.cwl.gov.cn/cwl_admin/front/cwlkj/search/kjxx/findDrawNotice?name=dlt&issueCount=100',tryParseDlt);
 }
 
