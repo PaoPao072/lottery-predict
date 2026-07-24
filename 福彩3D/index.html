@@ -278,17 +278,18 @@ async function loadData(){var cached=getCached();if(cached){allDraws=cached;setB
 /* ==================================================================
    8-FACTOR PER-POSITION SCORING (improved)
    ================================================================== */
+var DECAY_L=0.03;function dcy(i){return Math.exp(-DECAY_L*i)}function effN(N){var s=0;for(var i=0;i<N;i++)s+=dcy(i);return Math.round(s)}
 function computePositionScores(draws,posIdx){
   var N=draws.length;if(N<10)return null;
-  var freq={};for(var i=0;i<DIGIT_R;i++)freq[i]=0;draws.forEach(function(d){freq[d.digits[posIdx]]++});
+  var freq={};for(var i=0;i<DIGIT_R;i++)freq[i]=0;draws.forEach(function(d,i){freq[d.digits[posIdx]]+=dcy(i)});
   var omi=[];for(var n=0;n<DIGIT_R;n++){var f=false;for(var i=0;i<N;i++){if(draws[i].digits[posIdx]===n){omi.push({num:n,omi:i});f=true;break}}if(!f)omi.push({num:n,omi:N})}
   var maxO={},curO={};for(var n=0;n<DIGIT_R;n++){maxO[n]=0;curO[n]=0}draws.forEach(function(d){for(var n=0;n<DIGIT_R;n++){if(d.digits[posIdx]===n){maxO[n]=Math.max(maxO[n],curO[n]);curO[n]=0}else curO[n]++}});for(var n=0;n<DIGIT_R;n++)maxO[n]=Math.max(maxO[n],curO[n]);
-  var expected=N/DIGIT_R;
+  var en=effN(N);var expected=en/DIGIT_R;
   // Cross-position correlation
   function crossPos(n){var s=0;draws.slice(0,Math.min(10,N)).forEach(function(d){for(var p=0;p<3;p++){if(p!==posIdx&&d.digits[p]===n)s+=3}});return Math.min(100,s*10)}
   // Neighbor score: n-1 or n+1 recent appearance
   function neighborScore(n){var s=0,r=draws.slice(0,Math.min(10,N));r.forEach(function(d){if(Math.abs(d.digits[posIdx]-n)<=1)s++});return Math.min(100,s*10)}
-  function ewma(n){var l=0.3,e=0,c=0;for(var i=0;i<Math.min(30,N);i++){var h=draws[i].digits[posIdx]===n?1:0;if(i===0)e=h;else e=l*h+(1-l)*e;c+=h}return{ewma:e,count:c}}
+  function ewma(n){var l=0.3,e=0,c=0;for(var i=0;i<Math.min(30,N);i++){var h=draws[i].digits[posIdx]===n?1:0;if(i===0)e=h;else e=l*h+(1-l)*e;c+=h*dcy(i)}return{ewma:e,count:c}}
 
   var scores=[];
   for(var n=0;n<DIGIT_R;n++){
@@ -301,12 +302,12 @@ function computePositionScores(draws,posIdx){
     var pats=50+(ip?15:0)+(n%2===0?5:0)+(n%3===0?5:-5);
     // 012路 factor (10%)
     var route012=n%3;
-    var routeCounts=[0,0,0];draws.slice(0,Math.min(30,N)).forEach(function(d){routeCounts[d.digits[posIdx]%3]++});
+    var routeCounts=[0,0,0];draws.slice(0,Math.min(30,N)).forEach(function(d,i){routeCounts[d.digits[posIdx]%3]+=dcy(i)});
     var routeTotal=routeCounts[0]+routeCounts[1]+routeCounts[2]||1;
     var rs=Math.min(100,50+((routeCounts[route012]/Math.max(1,routeTotal))-1/3)*-90);
     // 质合 factor (5%)
     // 使用全局PRIMES=Set
-    var primeRecent=0,compRecent=0;draws.slice(0,Math.min(30,N)).forEach(function(d){var x=d.digits[posIdx];if(PRIMES.has(x))primeRecent++;else compRecent++});
+    var primeRecent=0,compRecent=0;draws.slice(0,Math.min(30,N)).forEach(function(d,i){var x=d.digits[posIdx];if(PRIMES.has(x))primeRecent+=dcy(i);else compRecent+=dcy(i)});
     var primeRatio=primeRecent/Math.max(1,primeRecent+compRecent);
     var primeS=PRIMES.has(n)?Math.min(100,55+(0.30-primeRatio)*150):Math.min(100,55+(primeRatio-0.30)*150);
     var total=os*0.18+fs*0.20+ts*0.15+rs*0.10+ps*0.10+cs*0.08+ns*0.08+pats*0.05+primeS*0.06;
@@ -405,13 +406,14 @@ function renderHistory(){
   }
 }
 
+function calcMetrics3D(r){var tp=0,fp=0,fn2=0;r.forEach(function(x){if(x.hits>=2){tp++}else{fp++;fn2++}});var prec=tp/Math.max(1,tp+fp),rec=tp/Math.max(1,tp+fn2),f1=2*prec*rec/Math.max(0.001,prec+rec);var cost=r.length*2,prize=r.reduce(function(s,x){return s+(x.hits===3?1040:x.hits===2?20:0)},0);return{prec:(prec*100).toFixed(1)+'%',rec:(rec*100).toFixed(1)+'%',f1:f1.toFixed(3),pl:((prize-cost)/cost).toFixed(2)}}
 function runBacktest(){
   var n=parseInt(document.getElementById('backtestPeriod').value)||20,si=0;document.getElementById('backtestLoading').textContent='⏳ 计算中...';
   setTimeout(function(){
     try{var results=[];for(var i=n-1;i>=0;i--){var ti=si+i;if(ti>=allDraws.length)continue;var past=allDraws.slice(ti+1);if(past.length<10)continue;var sc=[computePositionScores(past,0),computePositionScores(past,1),computePositionScores(past,2)];if(sc.some(function(s){return!s}))continue;var pr=[sc[0][0].num,sc[1][0].num,sc[2][0].num],act=allDraws[ti],h=0;for(var p=0;p<3;p++)if(pr[p]===act.digits[p])h++;results.unshift({issue:act.issue,pred:pr,actual:act.digits,hits:h})}
     var th=0;results.forEach(function(r){th+=r.hits});var ar=results.length>0?(th/results.length).toFixed(1):'--',best=0;results.forEach(function(r){if(r.hits>best)best=r.hits});
-    document.getElementById('backtestStats').innerHTML='<div class="stat-card"><div class="stat-value">'+results.length+'</div><div class="stat-label">回测期数</div></div><div class="stat-card"><div class="stat-value red">'+ar+'</div><div class="stat-label">均命中/期</div></div><div class="stat-card"><div class="stat-value gold">'+best+'</div><div class="stat-label">最佳</div></div><div class="stat-card"><div class="stat-value green">'+results.filter(function(r){return r.hits===3}).length+'</div><div class="stat-label">全中</div></div>';
-    var bh='<table><thead><tr><th>期号</th><th>预测</th><th>实际</th><th>命中</th></tr></thead><tbody>';results.forEach(function(r){bh+='<tr><td>'+r.issue+'</td><td><span class="ball bai">'+r.pred[0]+'</span><span class="ball shi">'+r.pred[1]+'</span><span class="ball ge">'+r.pred[2]+'</span></td><td>'+r.actual.map(function(d,i){return'<span class="ball '+POS[i]+(r.pred[i]===d?' match':' miss')+'">'+d+'</span>'}).join('')+'</td><td><strong style="color:'+(r.hits===3?'#27ae60':r.hits>=1?'#f39c12':'#e74c3c')+'">'+r.hits+'/3</strong></td></tr>'});bh+='</tbody></table>';document.getElementById('backtestTable').innerHTML=bh;document.getElementById('backtestLoading').textContent='✅ 完成'}catch(e){document.getElementById('backtestLoading').textContent='❌ 出错:'+e.message}
+    var m=calcMetrics3D(results);document.getElementById('backtestStats').innerHTML='<div class="stat-card"><div class="stat-value">'+results.length+'</div><div class="stat-label">回测期数</div></div><div class="stat-card"><div class="stat-value red">'+ar+'</div><div class="stat-label">均命中/期</div></div><div class="stat-card"><div class="stat-value gold">'+best+'</div><div class="stat-label">最佳</div></div><div class="stat-card"><div class="stat-value green">'+results.filter(function(r){return r.hits===3}).length+'</div><div class="stat-label">全中</div></div>';
+    var bh='<table><thead><tr><th>期号</th><th>预测</th><th>实际</th><th>命中</th></tr></thead><tbody>';results.forEach(function(r){bh+='<tr><td>'+r.issue+'</td><td><span class="ball bai">'+r.pred[0]+'</span><span class="ball shi">'+r.pred[1]+'</span><span class="ball ge">'+r.pred[2]+'</span></td><td>'+r.actual.map(function(d,i){return'<span class="ball '+POS[i]+(r.pred[i]===d?' match':' miss')+'">'+d+'</span>'}).join('')+'</td><td><strong style="color:'+(r.hits===3?'#27ae60':r.hits>=1?'#f39c12':'#e74c3c')+'">'+r.hits+'/3</strong></td></tr>'});bh+='</tbody></table>';document.getElementById('backtestTable').innerHTML=bh;document.getElementById('backtestLoading').textContent='✅ F1='+m.f1+' P='+m.prec+' R='+m.rec+' 盈亏='+m.pl}catch(e){document.getElementById('backtestLoading').textContent='❌ 出错:'+e.message}
   },50);
 }
 

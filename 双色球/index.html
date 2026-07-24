@@ -359,6 +359,7 @@ async function loadData(){
    ================================================================== */
 function C(n,k){if(k>n)return 0;var r=1;for(var i=1;i<=k;i++)r=r*(n-i+1)/i;return Math.round(r)}
 
+var DECAY_L=0.03;function dcy(i){return Math.exp(-DECAY_L*i)}function effN(N){var s=0;for(var i=0;i<N;i++)s+=dcy(i);return Math.round(s)}
 function computeAllScores(draws){
   var N=draws.length;if(N<10)return null;
 
@@ -552,13 +553,14 @@ function renderKillHistoryTable(){
 /* ==================================================================
    BACKTEST
    ================================================================== */
+function calcMetricsSSQ(r){var tp=0,fp=0,fn2=0;r.forEach(function(x){if(x.redHits>=3){tp++}else{fp++;fn2++}});var prec=tp/Math.max(1,tp+fp),rec=tp/Math.max(1,tp+fn2),f1=2*prec*rec/Math.max(0.001,prec+rec);var cost=r.length*2,prize=r.reduce(function(s,x){return s+(x.redHits===6&&x.blueHit?5000000:x.redHits===6?100000:(x.redHits===5&&x.blueHit?3000:x.redHits===5||x.redHits===4&&x.blueHit?200:x.redHits===4||x.blueHit?10:0))},0);return{prec:(prec*100).toFixed(1)+'%',rec:(rec*100).toFixed(1)+'%',f1:f1.toFixed(3),pl:((prize-cost)/cost).toFixed(2)}}
 function runBacktest(){
   var n=parseInt(document.getElementById('backtestPeriod').value)||20,si=0;document.getElementById('backtestLoading').textContent='⏳ 计算中...';
   setTimeout(function(){
     try{var results=[];for(var i=n-1;i>=0;i--){var ti=si+i;if(ti>=allDraws.length)continue;var past=allDraws.slice(ti+1);if(past.length<10)continue;var scores=computeAllScores(past);if(!scores)continue;var pr=scores.redScores.slice(0,6).map(function(r){return r.num}).sort(function(a,b){return a-b}),pb=scores.blueScores[0].num,act=allDraws[ti],rh=0;pr.forEach(function(n){if(act.red.indexOf(n)>=0)rh++});results.unshift({issue:act.issue,predR:pr,predB:pb,actR:act.red,actB:act.blue,rh:rh,bh:pb===act.blue})}
     var tr=0,tb=0;results.forEach(function(r){tr+=r.rh;if(r.bh)tb++});var ar=results.length>0?(tr/results.length).toFixed(1):'--',brr=results.length>0?(tb/results.length*100).toFixed(0)+'%':'--';var best=0;results.forEach(function(r){if(r.rh+(r.bh?1:0)>best)best=r.rh+(r.bh?1:0)});
     document.getElementById('backtestStats').innerHTML='<div class="stat-card"><div class="stat-value">'+results.length+'</div><div class="stat-label">回测期数</div></div><div class="stat-card"><div class="stat-value red">'+ar+'</div><div class="stat-label">均红命中</div></div><div class="stat-card"><div class="stat-value blue">'+brr+'</div><div class="stat-label">蓝球命中率</div></div><div class="stat-card"><div class="stat-value gold">'+best+'</div><div class="stat-label">最佳</div></div>';
-    var bh='<table><thead><tr><th>期号</th><th>预测</th><th>蓝</th><th>实际</th><th>蓝</th><th>命中</th></tr></thead><tbody>';results.forEach(function(r){bh+='<tr><td>'+r.issue+'</td><td>'+r.predR.map(function(n){return'<span class="ball red">'+(n<10?'0'+n:n)+'</span>'}).join('')+'</td><td><span class="ball blue">'+(r.predB<10?'0'+r.predB:r.predB)+'</span></td><td>'+r.actR.map(function(n){return'<span class="ball red'+(r.predR.indexOf(n)>=0?' match':' miss')+'">'+(n<10?'0'+n:n)+'</span>'}).join('')+'</td><td><span class="ball blue'+(r.bh?' match':' miss')+'">'+(r.actB<10?'0'+r.actB:r.actB)+'</span></td><td><strong style="color:'+(r.rh>=4?'#27ae60':r.rh>=2?'#f39c12':'#e74c3c')+'">'+r.rh+'/6'+(r.bh?'+蓝':'')+'</strong></td></tr>'});bh+='</tbody></table>';document.getElementById('backtestTable').innerHTML=bh;document.getElementById('backtestLoading').textContent='✅ 完成'}catch(e){document.getElementById('backtestLoading').textContent='❌ 出错:'+e.message}
+    var bh='<table><thead><tr><th>期号</th><th>预测</th><th>蓝</th><th>实际</th><th>蓝</th><th>命中</th></tr></thead><tbody>';results.forEach(function(r){bh+='<tr><td>'+r.issue+'</td><td>'+r.predR.map(function(n){return'<span class="ball red">'+(n<10?'0'+n:n)+'</span>'}).join('')+'</td><td><span class="ball blue">'+(r.predB<10?'0'+r.predB:r.predB)+'</span></td><td>'+r.actR.map(function(n){return'<span class="ball red'+(r.predR.indexOf(n)>=0?' match':' miss')+'">'+(n<10?'0'+n:n)+'</span>'}).join('')+'</td><td><span class="ball blue'+(r.bh?' match':' miss')+'">'+(r.actB<10?'0'+r.actB:r.actB)+'</span></td><td><strong style="color:'+(r.rh>=4?'#27ae60':r.rh>=2?'#f39c12':'#e74c3c')+'">'+r.rh+'/6'+(r.bh?'+蓝':'')+'</strong></td></tr>'});bh+='</tbody></table>';document.getElementById('backtestTable').innerHTML=bh;var mb=calcMetricsSSQ(results);document.getElementById('backtestLoading').textContent='✅ F1='+mb.f1+' P='+mb.prec+' R='+mb.rec+' 盈亏='+mb.pl}catch(e){document.getElementById('backtestLoading').textContent='❌ 出错:'+e.message}
   },50);
 }
 

@@ -333,6 +333,7 @@ async function loadData(){
    ALGORITHM: Quantum-Inspired Probabilistic Fusion Model
    Completely different from SSQ's 8-factor approach
    ================================================================== */
+var DECAY_L=0.03;function dcy(i){return Math.exp(-DECAY_L*i)}function effN(N){var s=0;for(var i=0;i<N;i++)s+=dcy(i);return Math.round(s)}
 function computeAllScores(draws){
   var N=draws.length;
   if(N<10)return null;
@@ -340,7 +341,7 @@ function computeAllScores(draws){
   // === Factor 1: Markov State Transition (22%) ===
   // Classify each number into Cold/Warm/Hot based on omission
   function markovScore(range,isBack){
-    var avgO=isBack?Math.round(N/BACK_R):Math.round(N*5/FRONT_R);
+    var en=effN(N);var avgO=isBack?Math.round(en/BACK_R):Math.round(en*5/FRONT_R);
     var scores=[];
     for(var n=1;n<=range;n++){
       // Find omission
@@ -377,9 +378,8 @@ function computeAllScores(draws){
   function bayesianScore(range,isBack){
     var scores=[],totalDraws=N,expected=isBack?N*2/BACK_R:N*5/FRONT_R;
     for(var n=1;n<=range;n++){
-      var hits=0;draws.forEach(function(d){var ns=isBack?d.back:d.front;if(ns.indexOf(n)>=0)hits++});
-      // Beta(alpha, beta) posterior: alpha=1+hits, beta=1+totalDraws-hits
-      var alpha=1+hits,beta=1+totalDraws-hits;
+      var hits=0;draws.forEach(function(d,i){var ns=isBack?d.back:d.front;if(ns.indexOf(n)>=0)hits+=dcy(i)});
+      var effTotal=effN(N);var alpha=1+hits,beta=1+effTotal-hits;
       var posterior=alpha/(alpha+beta);
       // Normalize against expected probability
       var expProb=expected/totalDraws;
@@ -467,10 +467,9 @@ function computeAllScores(draws){
   function gravityScore(range,isBack){
     var scores=[];
     for(var n=1;n<=range;n++){
-      var gaps=[],last=N;
-      for(var i=0;i<N;i++){
+      var gaps=[],last=N;for(var i=0;i<N;i++){var dw=dcy(i);
         var ns=isBack?draws[i].back:draws[i].front;
-        if(ns.indexOf(n)>=0){gaps.push(i-last);last=i}
+        if(ns.indexOf(n)>=0){gaps.push((i-last)*dw);last=i}
       }
       // Longer gaps = stronger gravity pull
       var gravity=0;gaps.forEach(function(g){if(g>0)gravity+=g*g}); // square for nonlinear weight
@@ -995,6 +994,7 @@ function renderHistory(){
 /* ==================================================================
    BACKTEST
    ================================================================== */
+function calcMetricsDLT(r){var tp=0,fp=0,fn2=0;r.forEach(function(x){if(x.totalHits>=3){tp++}else{fp++;fn2++}});var prec=tp/Math.max(1,tp+fp),rec=tp/Math.max(1,tp+fn2),f1=2*prec*rec/Math.max(0.001,prec+rec);var cost=r.length*2,prize=r.reduce(function(s,x){return s+(x.totalHits===5&&x.backHits===2?10000000:x.totalHits===5?500000:(x.totalHits===4&&x.backHits===2?3000:x.totalHits===4||x.backHits===2?200:x.totalHits===3||x.backHits===1?15:0))},0);return{prec:(prec*100).toFixed(1)+'%',rec:(rec*100).toFixed(1)+'%',f1:f1.toFixed(3),pl:((prize-cost)/cost).toFixed(2)}}
 function runBacktest(){
   var n=parseInt(document.getElementById('backtestPeriod').value)||20,si=0;document.getElementById('backtestLoading').textContent='⏳ 计算中...';
   setTimeout(function(){
@@ -1002,7 +1002,7 @@ function runBacktest(){
     var tf=0,tb=0;results.forEach(function(r){tf+=r.fh;tb+=r.bh});var af=results.length>0?(tf/results.length).toFixed(1):'--',abr=results.length>0?(tb/results.length).toFixed(1):'--';var best2=0;results.forEach(function(r){if(r.fh+r.bh>best2)best2=r.fh+r.bh});
     document.getElementById('backtestStats').innerHTML='<div class="stat-card"><div class="stat-value">'+results.length+'</div><div class="stat-label">回测期数</div></div><div class="stat-card"><div class="stat-value" style="color:#8e44ad">'+af+'</div><div class="stat-label">均前区命中/5</div></div><div class="stat-card"><div class="stat-value gold">'+abr+'</div><div class="stat-label">均后区命中/2</div></div><div class="stat-card"><div class="stat-value green">'+best2+'</div><div class="stat-label">最佳</div></div>';
     var bh='<table><thead><tr><th>期号</th><th>预测</th><th>后区</th><th>实际</th><th>后区</th><th>命中</th></tr></thead><tbody>';
-    results.forEach(function(r){bh+='<tr><td>'+r.issue+'</td><td>'+r.predF.map(function(n){return ball('front','',n)}).join('')+'</td><td>'+r.predB.map(function(n){return ball('back','',n)}).join('')+'</td><td>'+r.actF.map(function(n){return ball('front',r.predF.indexOf(n)>=0?' match':' miss',n)}).join('')+'</td><td>'+r.actB.map(function(n){return ball('back',r.predB.indexOf(n)>=0?' match':' miss',n)}).join('')+'</td><td><strong style="color:'+(r.fh+r.bh>=4?'#27ae60':r.fh+r.bh>=2?'#f39c12':'#e74c3c')+'">前'+r.fh+'/5+后'+r.bh+'/2</strong></td></tr>'});bh+='</tbody></table>';document.getElementById('backtestTable').innerHTML=bh;document.getElementById('backtestLoading').textContent='✅ 完成'}catch(e){document.getElementById('backtestLoading').textContent='❌ 出错:'+e.message}
+    results.forEach(function(r){bh+='<tr><td>'+r.issue+'</td><td>'+r.predF.map(function(n){return ball('front','',n)}).join('')+'</td><td>'+r.predB.map(function(n){return ball('back','',n)}).join('')+'</td><td>'+r.actF.map(function(n){return ball('front',r.predF.indexOf(n)>=0?' match':' miss',n)}).join('')+'</td><td>'+r.actB.map(function(n){return ball('back',r.predB.indexOf(n)>=0?' match':' miss',n)}).join('')+'</td><td><strong style="color:'+(r.fh+r.bh>=4?'#27ae60':r.fh+r.bh>=2?'#f39c12':'#e74c3c')+'">前'+r.fh+'/5+后'+r.bh+'/2</strong></td></tr>'});bh+='</tbody></table>';document.getElementById('backtestTable').innerHTML=bh;var md=calcMetricsDLT(results);document.getElementById('backtestLoading').textContent='✅ F1='+md.f1+' P='+md.prec+' R='+md.rec+' 盈亏='+md.pl}catch(e){document.getElementById('backtestLoading').textContent='❌ 出错:'+e.message}
   },50);
 }
 function generateRecommendationFrom(draws){var orig=allDraws;allDraws=draws;try{return generateRecommendation()}finally{allDraws=orig}}
