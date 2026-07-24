@@ -278,7 +278,56 @@ async function loadData(){var cached=getCached();if(cached){allDraws=cached;setB
 /* ==================================================================
    8-FACTOR PER-POSITION SCORING (improved)
    ================================================================== */
-var DECAY_L=0.03;function dcy(i){return Math.exp(-DECAY_L*i)}function effN(N){var s=0;for(var i=0;i<N;i++)s+=dcy(i);return Math.round(s)}
+var DECAY_L=0.03;function dcy(i){return Math.exp(-DECAY_L*i)}
+
+
+/* === 滑动窗口集成预测 === */
+var ENSEMBLE_WINDOWS=[30,60,100,150,200];
+function ensembleVote(computeFn,extractTopFn,k){
+  var allVotes={};
+  ENSEMBLE_WINDOWS.forEach(function(w){
+    if(w>allDraws.length)return;
+    var subset=allDraws.slice(0,w);
+    var result=computeFn(subset);
+    if(!result)return;
+    var tops=extractTopFn(result,k);
+    var winWeight=Math.exp(-0.01*(allDraws.length-w)); // 更大窗口=更多数据=更高权重
+    tops.forEach(function(num,rank){allVotes[num]=(allVotes[num]||0)+winWeight*(k-rank)/k});
+  });
+  return Object.entries(allVotes).sort(function(a,b){return b[1]-a[1]}).slice(0,k).map(function(x){return parseInt(x[0])});
+}
+
+/* === 蒙特卡洛交叉验证 === */
+function monteCarloBacktest(runBacktestFn,iterations){
+  iterations=iterations||20;
+  var results=[];
+  var original=allDraws;
+  for(var iter=0;iter<iterations;iter++){
+    // Bootstrap采样：随机抽取80%数据
+    var sample=[],used={};
+    var targetSize=Math.floor(allDraws.length*0.8);
+    while(sample.length<targetSize){
+      var idx=Math.floor(Math.random()*allDraws.length);
+      if(!used[idx]){used[idx]=true;sample.push(allDraws[idx])}
+    }
+    allDraws=sample.sort(function(a,b){return parseInt(b.issue)-parseInt(a.issue)});
+    var btResult=runBacktestFn();
+    if(btResult)results.push(btResult);
+  }
+  allDraws=original; // 恢复
+  // 聚合统计
+  var sum={f1:0,prec:0,rec:0,pl:0};
+  results.forEach(function(r){sum.f1+=parseFloat(r.f1);sum.prec+=parseFloat(r.prec);sum.rec+=parseFloat(r.rec);sum.pl+=parseFloat(r.pl)});
+  var n=results.length||1;
+  return{
+    f1Mean:(sum.f1/n).toFixed(3),precMean:(sum.prec/n).toFixed(1)+'%',recMean:(sum.rec/n).toFixed(1)+'%',
+    plMean:(sum.pl/n).toFixed(2),samples:n,
+    f1Std:calcStd(results.map(function(r){return parseFloat(r.f1)})).toFixed(3),
+    plStd:calcStd(results.map(function(r){return parseFloat(r.pl)})).toFixed(2)
+  };
+}
+function calcStd(arr){var m=arr.reduce(function(a,b){return a+b},0)/arr.length;return Math.sqrt(arr.reduce(function(s,x){return s+Math.pow(x-m,2)},0)/arr.length)}
+function effN(N){var s=0;for(var i=0;i<N;i++)s+=dcy(i);return Math.round(s)}
 function computePositionScores(draws,posIdx){
   var N=draws.length;if(N<10)return null;
   var freq={};for(var i=0;i<DIGIT_R;i++)freq[i]=0;draws.forEach(function(d,i){freq[d.digits[posIdx]]+=dcy(i)});
@@ -310,7 +359,7 @@ function computePositionScores(draws,posIdx){
     var primeRecent=0,compRecent=0;draws.slice(0,Math.min(30,N)).forEach(function(d,i){var x=d.digits[posIdx];if(PRIMES.has(x))primeRecent+=dcy(i);else compRecent+=dcy(i)});
     var primeRatio=primeRecent/Math.max(1,primeRecent+compRecent);
     var primeS=PRIMES.has(n)?Math.min(100,55+(0.30-primeRatio)*150):Math.min(100,55+(primeRatio-0.30)*150);
-    var total=os*0.18+fs*0.20+ts*0.15+rs*0.10+ps*0.10+cs*0.08+ns*0.08+pats*0.05+primeS*0.06;
+    var total=os*0.18+fs*0.20+ts*0.15+rs*0.10+ps*0.12+nb*0.14+pats*0.05+primeS*0.06;
     scores.push({num:n,omi:o,freq:fq,score:Math.round(total*10)/10,bd:{omi:Math.round(os),fq:Math.round(fs),tr:Math.round(ts),ps:Math.round(ps),cr:Math.round(cs),ns:Math.round(ns),pt:Math.round(pats)}});
   }
   scores.sort(function(a,b){return b.score-a.score});return scores;
