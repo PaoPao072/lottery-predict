@@ -293,7 +293,7 @@ function computePositionScores(draws,posIdx){
   var scores=[];
   for(var n=0;n<DIGIT_R;n++){
     var o=omi.filter(function(x){return x.num===n})[0].omi,mo=maxO[n]||1,fq=freq[n]||0,tr=ewma(n),cr=crossPos(n),nb=neighborScore(n),ip=PRIMES.has(n)?1:0;
-    var os=Math.min(100,(o/Math.max(1,mo))*100*0.9+(ip?5:0));
+    var omissionRatio=o/Math.max(1,mo);var os;if(omissionRatio>1.3){os=Math.max(40,100-(omissionRatio-1.3)*200)}else{os=Math.min(100,Math.sqrt(omissionRatio)*90+(ip?5:0))}
     var sd=Math.sqrt(expected*(1-1/DIGIT_R)),zs=sd>0?Math.abs((fq-expected)/sd):0,fs=Math.max(0,100-zs*35);
     var ts=Math.min(100,(tr.count/Math.min(30,N))*100*1.5+tr.ewma*40);
     var ps=45+Math.abs(4.5-n)*(-3)+cr*0.3; // position balance
@@ -309,7 +309,7 @@ function computePositionScores(draws,posIdx){
     var primeRecent=0,compRecent=0;draws.slice(0,Math.min(30,N)).forEach(function(d){var x=d.digits[posIdx];if(PRIMES.has(x))primeRecent++;else compRecent++});
     var primeRatio=primeRecent/Math.max(1,primeRecent+compRecent);
     var primeS=PRIMES.has(n)?Math.min(100,55+(0.30-primeRatio)*150):Math.min(100,55+(primeRatio-0.30)*150);
-    var total=os*0.23+fs*0.18+ts*0.13+rs*0.10+ps*0.10+cs*0.08+ns*0.08+pats*0.05+primeS*0.05;
+    var total=os*0.18+fs*0.20+ts*0.15+rs*0.10+ps*0.10+cs*0.08+ns*0.08+pats*0.05+primeS*0.06;
     scores.push({num:n,omi:o,freq:fq,score:Math.round(total*10)/10,bd:{omi:Math.round(os),fq:Math.round(fs),tr:Math.round(ts),ps:Math.round(ps),cr:Math.round(cs),ns:Math.round(ns),pt:Math.round(pats)}});
   }
   scores.sort(function(a,b){return b.score-a.score});return scores;
