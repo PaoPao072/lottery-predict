@@ -475,10 +475,10 @@ function computePositionScores(draws,posIdx){
     var routeTotal=routeCounts[0]+routeCounts[1]+routeCounts[2]||1;
     var rs=Math.min(100,50+((routeCounts[route012]/Math.max(1,routeTotal))-1/3)*-90);
     // 质合 factor (5%)
-    var primeSet=[2,3,5,7];
+    // 使用全局PRIMES=Set
     var primeRecent=0,compRecent=0;draws.slice(0,Math.min(30,N)).forEach(function(d){var x=d.digits[posIdx];if(primeSet.indexOf(x)>=0)primeRecent++;else compRecent++});
     var primeRatio=primeRecent/Math.max(1,primeRecent+compRecent);
-    var primeS=primeSet.indexOf(n)>=0?Math.min(100,55+(0.30-primeRatio)*150):Math.min(100,55+(primeRatio-0.30)*150);
+    var primeS=PRIMES.has(n)?Math.min(100,55+(0.30-primeRatio)*150):Math.min(100,55+(primeRatio-0.30)*150);
     var total=os*0.23+fs*0.18+ts*0.13+rs*0.10+ps*0.10+cs*0.08+ns*0.08+pats*0.05+primeS*0.05;
     scores.push({num:n,omi:o,freq:fq,score:Math.round(total*10)/10,bd:{omi:Math.round(os),fq:Math.round(fs),tr:Math.round(ts),ps:Math.round(ps),cr:Math.round(cs),ns:Math.round(ns),pt:Math.round(pats)}});
   }
@@ -700,6 +700,8 @@ function renderGroup(){
   // If duplicates, adjust
   if(posTops[0]===posTops[1]||posTops[0]===posTops[2]||posTops[1]===posTops[2]){
     for(var pi=0;pi<3;pi++){
+      var dup=posTops.filter(function(n,i){return i!==pi&&n===posTops[pi]}).length>0;
+      if(!dup)continue;
       for(var si=0;si<p.scores[pi].length;si++){
         var cand=p.scores[pi][si].num;
         if(posTops.filter(function(n,i){return i!==pi&&n===cand}).length===0){posTops[pi]=cand;break}

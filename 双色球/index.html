@@ -319,9 +319,9 @@ function setCache(d){try{localStorage.setItem(STORAGE_CACHE,JSON.stringify(d));l
 
 async function loadData(){
   var cached=getCached();
-  if(cached){allDraws=cached;setBadge('cache',allDraws.length+'期·缓存·最新'+allDraws[0].issue)}else{allDraws=EMBEDDED_DATA.slice();setBadge('offline',allDraws.length+'期·内置·最新'+allDraws[0].issue)}
+  if(cached){allDraws=cached;setBadge('cache',allDraws.length+'期·缓存·'+allDraws[0].issue+' 🔄 刷新中')}else{allDraws=EMBEDDED_DATA.slice();setBadge('offline',allDraws.length+'期·内置·'+allDraws[0].issue+' 🔄 刷新中')}
   // Background live fetch with status and retry
-  setBadge('offline','🔄 抓取中...');
+  // 抓取提示已在上一行合并;
   fetchLiveData().then(function(live){if(live&&live.length>50&&live.length>=allDraws.length){allDraws=live;setCache(live);setBadge('live',allDraws.length+'期·实时·最新'+allDraws[0].issue);currentPrediction=generateRecommendation();var el=document.querySelector('.tab-content.active');if(el&&el.id==='tab-rec')renderRecommendation()}else{setBadge('offline',allDraws.length+'期·离线·最新'+allDraws[0].issue+' (抓取失败，30秒后重试)');setTimeout(function(){fetchLiveData().then(function(live2){if(live2&&live2.length>50&&live2.length>=allDraws.length){allDraws=live2;setCache(live2);setBadge('live',allDraws.length+'期·实时·最新'+allDraws[0].issue);currentPrediction=generateRecommendation();var el2=document.querySelector('.tab-content.active');if(el2&&el2.id==='tab-rec')renderRecommendation()}}).catch(function(){})},30000)}}).catch(function(){setBadge('offline',allDraws.length+'期·离线·最新'+allDraws[0].issue)});
 }
 

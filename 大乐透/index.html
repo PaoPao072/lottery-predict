@@ -226,15 +226,15 @@ html{scroll-behavior:smooth}
 <p style="margin-top:8px">大乐透：前区 1-35 选 5 + 后区 1-12 选 2，每周一/三/六开奖</p>
 <p style="margin-top:8px"><strong>模型因子（独立于双色球/3D的算法体系）：</strong></p>
 <table style="margin-top:6px"><thead><tr><th>因子</th><th>权重</th><th>理论基础</th></tr></thead><tbody>
-<tr><td>马尔可夫状态转移</td><td>22%</td><td>冷热温三态转移矩阵，预测状态跃迁</td></tr>
-<tr><td>贝叶斯后验更新</td><td>18%</td><td>Beta-Binomial共轭先验，动态概率估计</td></tr>
-<tr><td>黄金分割空间加权</td><td>15%</td><td>φ=0.618分割区间，供需平衡分析</td></tr>
-<tr><td>信息熵最大化</td><td>12%</td><td>Shannon熵理论，组合多样性优化</td></tr>
+<tr><td>马尔可夫状态转移</td><td>21%</td><td>冷热温三态转移矩阵，预测状态跃迁</td></tr>
+<tr><td>贝叶斯后验更新</td><td>17%</td><td>Beta-Binomial共轭先验，动态概率估计</td></tr>
+<tr><td>黄金分割空间加权</td><td>14%</td><td>φ=0.618分割区间，供需平衡分析</td></tr>
+<tr><td>信息熵最大化</td><td>11%</td><td>Shannon熵理论，组合多样性优化</td></tr>
 <tr><td>斐波那契周期共振</td><td>10%</td><td>3/5/8/13/21周期检测，谐波叠加</td></tr>
-<tr><td>反距离引力场</td><td>10%</td><td>遗漏越久引力越强，非线性权重</td></tr>
+<tr><td>反距离引力场</td><td>8%</td><td>遗漏越久引力越强，非线性权重</td></tr>
 <tr><td>动量震荡信号</td><td>8%</td><td>频率变化加速度检测，RSI启发</td></tr>
 <tr><td>012路-黄金融合</td><td>7%</td><td>012路由×黄金分割联合加权，空间-路由双重均衡</td></tr>
-<tr><td>量子随机扰动</td><td>5%</td><td>可控随机正则化，防止过拟合</td></tr>
+<tr><td>量子随机扰动</td><td>4%</td><td>可控随机正则化，防止过拟合</td></tr>
 </tbody></table>
 <p style="margin-top:10px;color:var(--text2);font-size:0.7rem">⚠️ 彩票开奖是独立随机事件，任何模型无法预测未来结果。本系统仅供学术研究和娱乐参考，不构成投注建议。请理性购彩。</p>
 <p style="margin-top:4px;color:var(--text2);font-size:0.65rem">数据来源：中国体彩官网 cwl.gov.cn | 本地缓存3小时 | 内置约70期真实数据</p>
@@ -528,7 +528,7 @@ function setCache(d){try{localStorage.setItem(STORAGE_CACHE,JSON.stringify(d));l
 async function loadData(){
   var cached=getCached();
   if(cached){allDraws=cached;setBadge('cache',allDraws.length+'期·缓存·最新'+allDraws[0].issue)}else{allDraws=EMBEDDED_DATA.slice();setBadge('offline',allDraws.length+'期·内置·最新'+allDraws[0].issue)}
-  setBadge('offline','🔄 抓取中...');
+  // badge已合并;
   fetchLiveData().then(function(live){if(live&&live.length>50&&live.length>=allDraws.length){allDraws=live;setCache(live);setBadge('live',allDraws.length+'期·实时·最新'+allDraws[0].issue);currentPrediction=generateRecommendation();var el=document.querySelector('.tab-content.active');if(el&&el.id==='tab-rec')renderRecommendation()}else{setBadge('offline',allDraws.length+'期·离线·最新'+allDraws[0].issue+' (30秒后重试)');setTimeout(function(){fetchLiveData().then(function(live2){if(live2&&live2.length>50&&live2.length>=allDraws.length){allDraws=live2;setCache(live2);setBadge('live',allDraws.length+'期·实时·最新'+allDraws[0].issue);currentPrediction=generateRecommendation();var el2=document.querySelector('.tab-content.active');if(el2&&el2.id==='tab-rec')renderRecommendation()}}).catch(function(){})},30000)}}).catch(function(){setBadge('offline',allDraws.length+'期·离线·最新'+allDraws[0].issue)});
 }
 
@@ -697,7 +697,7 @@ function computeAllScores(draws){
       // If momentum < 1, number is "cooling down" - mean reversion suggests it may come back
       // If momentum > 1, number is "heating up"
       var sc=momentum<0.5?60+momentum*20:momentum>1.5?80-momentum*10:40+Math.abs(1-momentum)*40;
-      scores.push({num:n,score:Math.round(Math.min(100,sc))});
+      scores.push({num:n,score:Math.round(Math.max(0,Math.min(100,sc)))});
     }
     return scores;
   }
@@ -868,7 +868,7 @@ function renderRecommendation(){
   p.frontScores.slice(0,15).forEach(function(r,i){dh+='<tr><td><strong>#'+(i+1)+'</strong></td><td>'+ball('front','',r.num)+'</td><td><div class="score-bar-wrap"><div class="score-bar-bg"><div class="score-bar-fill '+(r.score>=70?'hi':r.score>=50?'mi':'lo')+'" style="width:'+r.score+'%"></div></div><span class="score-num">'+r.score+'</span></div></td><td>'+r.omi+'</td><td>'+r.bd.mk+'</td><td>'+r.bd.bay+'</td><td>'+r.bd.gz+'</td><td>'+r.bd.et+'</td><td>'+(r.bd.rg||'--')+'</td><td>'+(i<5?'<span class="tag tag-hot">推荐</span>':i<25?'<span class="tag tag-rise">大底</span>':'')+'</td></tr>'});dh+='</tbody></table>';document.getElementById('recDetailTable').innerHTML=dh;
 
   var tr=p.frontScores[0],odd=p.recFront.filter(function(n){return n%2===1}).length,sum2=p.recFront.reduce(function(a,b){return a+b},0),span=p.recFront[4]-p.recFront[0];
-  document.getElementById('recRationale').innerHTML='<p><strong>🎯 推荐：</strong>基于<strong>'+p.meta.totalDraws+'</strong>期·<strong>量子启发概率融合模型(QIPF)</strong> | 最高前区'+ball('front','',tr.num)+'评分<strong>'+tr.score+'</strong></p><p style="font-size:0.7rem;color:var(--text2)">7因子权重：马尔可夫22% + 贝叶斯18% + 黄金分割15% + 熵值12% + 斐波那契10% + 引力场10% + 动量8% + 量子扰动5%</p><p style="margin-top:4px">• 单式5+2=2元 | 复式6+3=<strong>'+p.fushiCombos+'注×2='+p.fushiPrice+'元</strong></p><p>• 特征：前区和值<strong>'+sum2+'</strong> | 跨度<strong>'+span+'</strong> | 奇偶<strong>'+odd+':'+(5-odd)+'</strong></p><p style="color:var(--text2);font-size:0.65rem">⚠️ 统计参考，不代表实际结果</p>';
+  document.getElementById('recRationale').innerHTML='<p><strong>🎯 推荐：</strong>基于<strong>'+p.meta.totalDraws+'</strong>期·<strong>量子启发概率融合模型(QIPF)</strong> | 最高前区'+ball('front','',tr.num)+'评分<strong>'+tr.score+'</strong></p><p style="font-size:0.7rem;color:var(--text2)">8因子权重：马尔可夫21% + 贝叶斯17% + 黄金分割14% + 熵值11% + 斐波那契10% + 引力场8% + 动量8% + 路金7% + 量子扰动4%</p><p style="margin-top:4px">• 单式5+2=2元 | 复式6+3=<strong>'+p.fushiCombos+'注×2='+p.fushiPrice+'元</strong></p><p>• 特征：前区和值<strong>'+sum2+'</strong> | 跨度<strong>'+span+'</strong> | 奇偶<strong>'+odd+':'+(5-odd)+'</strong></p><p style="color:var(--text2);font-size:0.65rem">⚠️ 统计参考，不代表实际结果</p>';
 }
 
 function renderKill(){
