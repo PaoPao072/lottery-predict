@@ -4,6 +4,9 @@ on:
     - cron: '30 * * * *'   # 每小时第30分钟执行
   workflow_dispatch:        # 支持手动触发
 
+permissions:
+  contents: write            # 允许推送提交
+
 jobs:
   update:
     runs-on: ubuntu-latest
@@ -11,7 +14,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
       - name: 抓取最新开奖数据
         run: node scripts/fetch-data.js
       - name: 提交更新
@@ -19,5 +22,9 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add data/
-          git diff --staged --quiet || git commit -m "🔄 自动更新开奖数据"
-          git push
+          if git diff --staged --quiet; then
+            echo "数据无变化，跳过提交"
+          else
+            git commit -m "🔄 自动更新开奖数据"
+            git push
+          fi
