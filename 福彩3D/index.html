@@ -520,7 +520,7 @@ function updatePickInfo(){
 /* ==================================================================
    HISTORY / BACKTEST
    ================================================================== */
-function loadPredictions(){try{var r=localStorage.getItem(STORAGE_PRED);if(r){predictionHistory=JSON.parse(r);autoMatch()}}catch(e){predictionHistory=[]}}
+function loadPredictions(){try{var r=localStorage.getItem(STORAGE_PRED);if(r){predictionHistory=JSON.parse(r);predictionHistory.forEach(function(ph){if(ph.digits&&!ph.predDigits)ph.predDigits=ph.digits;if(!ph.killDigits)ph.killDigits=[];if(!ph.hits)ph.hits=[false,false,false];if(!ph.fushiHits)ph.fushiHits=[-1,-1,-1];if(!ph.killHits)ph.killHits=[-1,-1,-1];if(typeof ph.issue==='number')ph.issue=String(ph.issue)});autoMatch()}}catch(e){predictionHistory=[]}}
 function savePredictions(){try{localStorage.setItem(STORAGE_PRED,JSON.stringify(predictionHistory))}catch(e){}}
 function saveCurrentPrediction(){if(!currentPrediction)return;var p=currentPrediction,next=parseInt(p.meta.latestIssue)+1;for(var i=0;i<predictionHistory.length;i++){if(predictionHistory[i].issue===String(next))return}predictionHistory.unshift({issue:String(next),date:new Date().toLocaleDateString(),predDigits:p.recDigits.slice(),fushiDigits:p.fushiPerPos.map(function(a){return a.slice()}),killDigits:p.killPerPos.map(function(a){return a.slice()}),confidence:p.overallConf,actualDigits:null,hits:[false,false,false],totalHits:-1,fushiHits:[-1,-1,-1],fushiTotalHits:-1,killHits:[-1,-1,-1]});savePredictions();autoMatch();renderHistory()}
 function autoSavePrediction(){
