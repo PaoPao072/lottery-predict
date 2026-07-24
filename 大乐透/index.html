@@ -563,7 +563,7 @@ function computeAllScores(draws){
         var ns2=isBack?draws[idx].back:draws[idx].front;
         var hit=ns2.indexOf(n)>=0;
         if(hit){
-          var newSt=w>avgO*1.5?0:w>avgO*0.8?1:2;
+          var newSt=o>avgO*1.5?0:o>avgO*0.6?1:2;
           trans[newSt]++;
           lastSt=newSt;
         }
@@ -1059,7 +1059,7 @@ function smartGenerate(count){
   var killFrontSet={},killBackSet={};p.killFront.forEach(function(n){killFrontSet[n]=true});p.killBack.forEach(function(n){killBackSet[n]=true});
   var dadiSet={};p.dadi.forEach(function(n){dadiSet[n]=true});
   var frontCandidates=p.frontScores.filter(function(x){return dadiSet[x.num]&&!killFrontSet[x.num]});
-  var backCandidates=p.backScores.filter(function(x){return !killBackSet[x.num]});
+  var backCandidates=p.backScores.filter(function(x){return !killBackSet[x.num]});if(frontCandidates.length<5||backCandidates.length<2){document.getElementById("genDisplay").innerHTML="<p style=color:var(--text2)>候选号码不足请刷新</p>";return}
   for(var c=0;c<count;c++){
     var av=frontCandidates.slice(),sel=[];
     while(sel.length<5){
@@ -1134,7 +1134,7 @@ function autoSavePrediction(){
   if(!currentPrediction)return;
   var p=currentPrediction,next=parseInt(p.meta.latestIssue)+1;
   for(var i=0;i<predictionHistory.length;i++){if(predictionHistory[i].issue===next)return}
-  predictionHistory.unshift({issue:next,time:new Date().toLocaleString(),front:p.recFront.slice(),back:p.recBack.slice(),fushiFront:p.fushiFront.slice(),fushiBack:p.fushiBack.slice(),killFront:p.killFront.slice(),killBack:p.killBack.slice(),confidence:p.overallConf,fushiIdx:currentFushiIdx,actualFront:null,actualBack:null,frontHits:-1,backHits:-1,totalHits:-1,fushiFrontHits:-1,fushiBackHits:-1,fushiTotalHits:-1,killFrontHits:-1,killBackHit:false});
+  predictionHistory.unshift({issue:next,time:new Date().toLocaleString(),front:p.recFront.slice(),back:p.recBack.slice(),fushiFront:p.fushiFront.slice(),fushiBack:p.fushiBack.slice(),killFront:p.killFront.slice(),killBack:p.killBack.slice(),confidence:p.overallConf,fushiIdx:currentFushiIdx,actualFront:null,actualBack:null,frontHits:-1,backHits:-1,totalHits:-1,fushiFrontHits:-1,fushiBackHits:-1,fushiTotalHits:-1,killFrontHits:-1,killBackHit:-1});
   if(predictionHistory.length>100)predictionHistory.pop();
   savePredictions();autoMatch();
 }
