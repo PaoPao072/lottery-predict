@@ -329,6 +329,8 @@ function fetchOne(url,parser){
 }
 
 async function fetchLiveData(){
+  try{var r0=await fetch("../data/ssq.json");if(r0.ok){var j0=await r0.json();if(Array.isArray(j0)&&j0.length>50)return j0}}catch(e){}
+  
   // 1. 同源JSON（GitHub Actions自动更新，任何设备/网络均可用）
   var r0=await fetchOne("../data/ssq.json",tryParseJSON);if(r0&&r0.length>50)return r0;
   // 2. 相对路径代理（同源）

@@ -312,6 +312,8 @@ function fetchOne(url,parser){
 }
 
 async function fetchLiveData(){
+  try{var r0=await fetch("../data/dlt.json");if(r0.ok){var j0=await r0.json();if(Array.isArray(j0)&&j0.length>50)return j0}}catch(e){}
+  
   var r0=await fetchOne('../data/dlt.json',tryParseJSON);if(r0&&r0.length>50)return r0;
   var r1=await fetchOne('/fetch?name=dlt',tryParseDlt);if(r1&&r1.length>50)return r1;
   var r2=await fetchOne('http://localhost:8888/fetch?name=dlt',tryParseDlt);if(r2&&r2.length>50)return r2;
