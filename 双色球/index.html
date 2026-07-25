@@ -603,6 +603,28 @@ function renderKillHistoryTable(){
    BACKTEST
    ================================================================== */
 function calcMetricsSSQ(r){var tp=0,fp=0,fn2=0;r.forEach(function(x){if(x.redHits>=3){tp++}else{fp++;fn2++}});var prec=tp/Math.max(1,tp+fp),rec=tp/Math.max(1,tp+fn2),f1=2*prec*rec/Math.max(0.001,prec+rec);var cost=r.length*2,prize=r.reduce(function(s,x){return s+(x.redHits===6&&x.blueHit?5000000:x.redHits===6?100000:(x.redHits===5&&x.blueHit?3000:x.redHits===5||x.redHits===4&&x.blueHit?200:x.redHits===4||x.blueHit?10:0))},0);return{prec:(prec*100).toFixed(1)+'%',rec:(rec*100).toFixed(1)+'%',f1:f1.toFixed(3),pl:((prize-cost)/cost).toFixed(2)}}
+
+function mcBacktestSSQ(){
+  document.getElementById("backtestLoading").textContent="🎲 蒙特卡洛采样中...";
+  setTimeout(function(){
+    try{
+      var n=parseInt(document.getElementById("backtestPeriod").value)||20,iters=20,allF1=[],allPL=[];
+      var orig=allDraws;
+      for(var iter=0;iter<iters;iter++){
+        var sample=[],used={},target=Math.floor(orig.length*0.8);
+        while(sample.length<target){var idx=Math.floor(Math.random()*orig.length);if(!used[idx]){used[idx]=true;sample.push(orig[idx])}}
+        allDraws=sample.sort(function(a,b){return parseInt(b.issue)-parseInt(a.issue)});
+        var results=[];for(var i=n-1;i>=0;i--){var ti=i;if(ti>=allDraws.length)continue;var past=allDraws.slice(ti+1);if(past.length<10)continue;var r=generateRecommendationFrom(past);if(!r)continue;var act=allDraws[ti],rh=0;r.recReds.forEach(function(x){if(act.red.indexOf(x)>=0)rh++});var bh=r.recBlue===act.blue;results.unshift({redHits:rh,blueHit:bh})}
+        var m=calcMetricsSSQ(results);allF1.push(parseFloat(m.f1));allPL.push(parseFloat(m.pl));
+      }
+      allDraws=orig;
+      var mf1=(allF1.reduce(function(a,b){return a+b},0)/iters).toFixed(3);
+      var sf1=Math.sqrt(allF1.reduce(function(s,x){return s+Math.pow(x-mf1,2)},0)/iters).toFixed(3);
+      var mpl=(allPL.reduce(function(a,b){return a+b},0)/iters).toFixed(2);
+      document.getElementById("backtestLoading").textContent="🎲 MC("+iters+"次): F1="+mf1+"±"+sf1+" | 盈亏="+mpl;
+    }catch(e){document.getElementById("backtestLoading").textContent="❌ "+e.message}
+  },50);
+}
 function runBacktest(){
   var n=parseInt(document.getElementById('backtestPeriod').value)||20,si=0;document.getElementById('backtestLoading').textContent='⏳ 计算中...';
   setTimeout(function(){

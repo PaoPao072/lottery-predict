@@ -456,6 +456,28 @@ function renderHistory(){
 }
 
 function calcMetrics3D(r){var tp=0,fp=0,fn2=0;r.forEach(function(x){if(x.hits>=2){tp++}else{fp++;fn2++}});var prec=tp/Math.max(1,tp+fp),rec=tp/Math.max(1,tp+fn2),f1=2*prec*rec/Math.max(0.001,prec+rec);var cost=r.length*2,prize=r.reduce(function(s,x){return s+(x.hits===3?1040:x.hits===2?20:0)},0);return{prec:(prec*100).toFixed(1)+'%',rec:(rec*100).toFixed(1)+'%',f1:f1.toFixed(3),pl:((prize-cost)/cost).toFixed(2)}}
+
+function mcBacktest3D(){
+  document.getElementById("backtestLoading").textContent="🎲 蒙特卡洛采样中...";
+  setTimeout(function(){
+    try{
+      var n=parseInt(document.getElementById("backtestPeriod").value)||20,iters=30,allF1=[],allPL=[];
+      var orig=allDraws;
+      for(var iter=0;iter<iters;iter++){
+        var sample=[],used={},target=Math.floor(orig.length*0.8);
+        while(sample.length<target){var idx=Math.floor(Math.random()*orig.length);if(!used[idx]){used[idx]=true;sample.push(orig[idx])}}
+        allDraws=sample.sort(function(a,b){return parseInt(b.issue)-parseInt(a.issue)});
+        var si=0,results=[];for(var i=n-1;i>=0;i--){var ti=si+i;if(ti>=allDraws.length)continue;var past=allDraws.slice(ti+1);if(past.length<10)continue;var sc=[computePositionScores(past,0),computePositionScores(past,1),computePositionScores(past,2)];if(sc.some(function(s){return!s}))continue;var pr=[sc[0][0].num,sc[1][0].num,sc[2][0].num],act=allDraws[ti],h=0;for(var p=0;p<3;p++)if(pr[p]===act.digits[p])h++;results.unshift({hits:h})}
+        var m=calcMetrics3D(results);allF1.push(parseFloat(m.f1));allPL.push(parseFloat(m.pl));
+      }
+      allDraws=orig;
+      var mf1=(allF1.reduce(function(a,b){return a+b},0)/iters).toFixed(3);
+      var sf1=Math.sqrt(allF1.reduce(function(s,x){return s+Math.pow(x-mf1,2)},0)/iters).toFixed(3);
+      var mpl=(allPL.reduce(function(a,b){return a+b},0)/iters).toFixed(2);
+      document.getElementById("backtestLoading").textContent="🎲 MC("+iters+"次): F1="+mf1+"±"+sf1+" | 盈亏="+mpl;
+    }catch(e){document.getElementById("backtestLoading").textContent="❌ "+e.message}
+  },50);
+}
 function runBacktest(){
   var n=parseInt(document.getElementById('backtestPeriod').value)||20,si=0;document.getElementById('backtestLoading').textContent='⏳ 计算中...';
   setTimeout(function(){
