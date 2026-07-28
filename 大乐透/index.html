@@ -312,7 +312,10 @@ function fetchOne(url,parser){
 }
 
 async function fetchLiveData(){
-  try{var r0=await fetch("../data/dlt.json");if(r0.ok){var j0=await r0.json();if(Array.isArray(j0)&&j0.length>50)return j0}}catch(e){}
+  // 1. 代理实时抓取（最优先）
+  var r0=await fetchOne("/fetch?name=dlt",tryParseDlt);if(r0&&r0.length>50)return r0;
+  // 2. 同源JSON快照（兜底）
+  try{var rj=await fetch("../data/dlt.json");if(rj.ok){var j0=await rj.json();if(Array.isArray(j0)&&j0.length>50)return j0}}catch(e){}
   
   var r0=await fetchOne('../data/dlt.json',tryParseJSON);if(r0&&r0.length>50)return r0;
   var r1=await fetchOne('/fetch?name=dlt',tryParseDlt);if(r1&&r1.length>50)return r1;
