@@ -177,7 +177,7 @@ html{scroll-behavior:smooth}
 </section>
 
 <!-- 智能选号 -->
-<section class="tab-content" id="tab-gen"><div class="card"><div class="card-header">🎲 智能选号 · 基于大底避开杀号 <select id="genCount" onchange="smartGenerate(parseInt(this.value))"><option value="5">5组</option><option value="10" selected>10组</option><option value="20">20组</option></select></div><div id="genDisplay"></div></div><div class="card"><div class="card-header">📜 生成历史</div><div id="genHistory"></div></div></section>
+<section class="tab-content" id="tab-gen"><div class="card"><div class="card-header">🎲 智能选号 · 基于大底避开杀号 <div style="display:flex;gap:4px"><button class="btn btn-accent" onclick="smartGenerate(5)">5组</button><button class="btn btn-accent" onclick="smartGenerate(10)">10组</button><button class="btn btn-accent" onclick="smartGenerate(20)">20组</button></div></div><div id="genDisplay"></div></div><div class="card"><div class="card-header">📜 生成历史</div><div id="genHistory"></div></div></section>
 
 <!-- 自选号 -->
 <section class="tab-content" id="tab-pick">
